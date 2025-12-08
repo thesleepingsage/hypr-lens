@@ -2,6 +2,8 @@
 
 This document explains exactly what the installer script does, demonstrating it is safe to run.
 
+> **Note:** Line numbers referenced in this document are relative to when it was published. Future updates to the installer may shift line positions, so numbers may be inaccurate at a later date. Use the provided `grep` commands to verify current locations.
+
 ## TL;DR
 
 | Aspect | Status |
