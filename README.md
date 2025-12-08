@@ -110,14 +110,16 @@ cd hypr-lens
 
 ## Updating
 
-Pull the latest changes and run the update command to refresh installed files without re-prompting for setup options:
+Pull the latest changes and run the update command to refresh installed files:
 
 ```bash
 git pull
 ./hypr-lens-install.sh --update
 ```
 
-> This preserves your existing config and skips interactive prompts.
+This preserves your existing config and skips most setup prompts.
+
+> **💡 Integration Recovery:** If your `shell.qml` was overwritten (e.g., after updating your dotfiles), the update command will detect the missing integration and offer to fix it automatically.
 
 ### Starting hypr-lens
 

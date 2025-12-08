@@ -976,13 +976,40 @@ update() {
     echo "=============================================="
     echo ""
 
-    # Show abbreviated next steps
+    # Check shell integration - offer recovery if missing
     if is_shell_integrated; then
+        success "Shell integration verified"
         info "Restart quickshell to apply changes:"
         echo "  killall quickshell; quickshell &"
     else
-        warn "Shell integration not detected"
-        echo "  Run without --update for integration instructions"
+        warn "Shell integration missing (shell.qml may have been overwritten)"
+        echo ""
+        echo "  Options:"
+        echo "    1) Auto-integrate into shell.qml (creates backup)"
+        echo "    2) Show manual integration instructions"
+        echo "    3) Skip (fix later)"
+        echo ""
+        echo -e -n "${YELLOW}[?]${NC} Choose option [1/2/3]: "
+        read -r choice
+        case "$choice" in
+            1)
+                auto_integrate_shell
+                ;;
+            2)
+                echo ""
+                info "Add to ~/.config/quickshell/shell.qml:"
+                echo ""
+                echo "  // At the top with imports:"
+                echo "  import \"./hypr-lens/modules/regionSelector\""
+                echo ""
+                echo "  // Inside root component (Scope, ShellRoot, etc.):"
+                echo "  RegionSelector {}"
+                echo ""
+                ;;
+            3|"")
+                info "Skipped. Run installer without --update for full setup."
+                ;;
+        esac
     fi
     echo ""
 }
