@@ -1,0 +1,3 @@
+singleton ColorUtils 1.0 ColorUtils.qml
+singleton FileUtils 1.0 FileUtils.qml
+singleton StringUtils 1.0 StringUtils.qml

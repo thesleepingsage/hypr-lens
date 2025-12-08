@@ -1,0 +1,12 @@
+FloatingActionButton 1.0 FloatingActionButton.qml
+MaterialShape 1.0 MaterialShape.qml
+MaterialSymbol 1.0 MaterialSymbol.qml
+Revealer 1.0 Revealer.qml
+RippleButton 1.0 RippleButton.qml
+StyledRectangularShadow 1.0 StyledRectangularShadow.qml
+StyledText 1.0 StyledText.qml
+StyledToolTip 1.0 StyledToolTip.qml
+StyledToolTipContent 1.0 StyledToolTipContent.qml
+Toolbar 1.0 Toolbar.qml
+ToolbarTabBar 1.0 ToolbarTabBar.qml
+ToolbarTabButton 1.0 ToolbarTabButton.qml
