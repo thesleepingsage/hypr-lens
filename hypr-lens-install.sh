@@ -1009,6 +1009,9 @@ update() {
             3|"")
                 info "Skipped. Run installer without --update for full setup."
                 ;;
+            *)
+                warn "Invalid choice. Run './hypr-lens-install.sh' for full setup."
+                ;;
         esac
     fi
     echo ""
