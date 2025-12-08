@@ -26,7 +26,7 @@
 
 ---
 
-A standalone, portable toolkit extracted from [end-4's dotfiles](https://github.com/end-4/dots-hyprland) that provides a polished region selector UI with window detection, screenshot capture, OCR text extraction, Google Lens integration, and screen recording.
+A standalone, portable toolkit extracted and refactored from [end-4's dotfiles](https://github.com/end-4/dots-hyprland) that provides a polished region selector UI with window detection, screenshot capture, OCR text extraction, Google Lens integration, and screen recording.
 
 <!--
 ## Screenshots
