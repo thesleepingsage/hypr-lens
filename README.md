@@ -21,6 +21,7 @@
   <img src="https://img.shields.io/badge/Hyprland-0.40%2B-blue" alt="Hyprland">
   <img src="https://img.shields.io/badge/quickshell-0.1.0%2B-green" alt="QuickShell">
   <img src="https://img.shields.io/badge/platform-Linux-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white" alt="Conventional Commits">
 </p>
 
 ---
