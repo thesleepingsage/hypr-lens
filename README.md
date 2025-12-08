@@ -13,6 +13,7 @@
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
   <a href="#configuration">Configuration</a> •
+  <a href="#security">Security</a> •
   <a href="#troubleshooting">Troubleshooting</a>
 </p>
 
@@ -329,6 +330,24 @@ If you want to set up matugen standalone:
 ```
 
 > **Note:** Remember to remove keybinds from your Hyprland config manually.
+
+## Security
+
+Concerned about what the installer does? We've got you covered.
+
+| Aspect | Status |
+|--------|--------|
+| Root/sudo | **Optional** - only if you choose auto-install packages |
+| Files modified | `~/.config/` and `~/.local/share/` only |
+| Network access | **None** - no downloads, no telemetry |
+| Reversible | **Yes** - `--uninstall` + automatic backups |
+
+Preview before running:
+```bash
+./hypr-lens-install.sh --dry-run
+```
+
+📄 **[Full Security Audit →](SECURITY.md)** — detailed breakdown with line numbers for verification.
 
 ## Troubleshooting
 
