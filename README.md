@@ -32,7 +32,7 @@ A standalone, portable toolkit extracted from [end-4's dotfiles](https://github.
 ## Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yourusername/hypr-lens/main/assets/screenshot-region.png" alt="Region selector" width="600">
+  <img src="https://raw.githubusercontent.com/thesleepingsage/hypr-lens/main/assets/screenshot-region.png" alt="Region selector" width="600">
 </p>
 -->
 
@@ -49,6 +49,8 @@ A standalone, portable toolkit extracted from [end-4's dotfiles](https://github.
 | 🎨 **Color Picker** | Pick colors from anywhere on screen |
 
 ## Prerequisites
+
+> **💡 Tip:** The installer automatically detects missing dependencies and offers to install them via `pacman`/`paru`/`yay`. You can skip manual installation and let the installer handle it!
 
 ### Required
 
@@ -87,7 +89,7 @@ A standalone, portable toolkit extracted from [end-4's dotfiles](https://github.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/hypr-lens.git
+git clone https://github.com/thesleepingsage/hypr-lens.git
 cd hypr-lens
 
 # Run the installer
@@ -107,13 +109,15 @@ cd hypr-lens
 | Default config | `~/.config/hypr-lens/config.jsonc` |
 
 ## Updating
-```bash
-# If hypr-lens is already installed...
-./hypr-lens-install.sh -d
 
-# or
+Pull the latest changes and run the update command to refresh installed files without re-prompting for setup options:
+
+```bash
+git pull
 ./hypr-lens-install.sh --update
 ```
+
+> This preserves your existing config and skips interactive prompts.
 
 ### Starting hypr-lens
 
