@@ -46,7 +46,7 @@ A standalone, portable toolkit extracted and refactored from [end-4's dotfiles](
 | 🪟 **Window Detection** | Click on detected windows/layers for quick capture |
 | 🔍 **Content Detection** | OpenCV-powered region detection within screenshots |
 | 📝 **OCR Text Extraction** | Extract text from selected regions using Tesseract |
-| 🔎 **Image Search** | Upload to Google Lens for visual search |
+| 🔎 **Image Search** | Copy to clipboard + open Google Lens ([see note](#image-search-note)) |
 | 🎬 **Screen Recording** | Record selected regions with optional audio |
 | 🎨 **Color Picker** | Pick colors from anywhere on screen |
 
@@ -206,6 +206,17 @@ hyprctl reload
 3. Click a window to capture it, or drag to select a custom region
 4. The screenshot is copied to your clipboard
 5. Right-click (if swappy installed) opens the editor
+
+### Image Search Note
+
+The Image Search feature (`Super+Shift+A`) works by:
+1. Capturing your selected region
+2. Copying the image to your clipboard
+3. Opening Google Lens in your browser
+
+You then paste (`Ctrl+V`) the image into Google Lens to search.
+
+> **Not a fan of this workflow?** No problem — just use the regular screenshot (`Super+Shift+S`) and search with your preferred method.
 
 ### IPC Commands
 
