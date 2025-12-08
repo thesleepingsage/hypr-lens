@@ -48,6 +48,14 @@ A standalone, portable toolkit extracted and refactored from [end-4's dotfiles](
 | 🎬 **Screen Recording** | Record selected regions with optional audio |
 | 🎨 **Color Picker** | Pick colors from anywhere on screen |
 
+## Compatibility
+
+> **⚠️ Arch Linux Only**
+>
+> This project is developed and tested exclusively on Arch Linux. The installer uses `pacman`/`paru`/`yay` and assumes an Arch-based system.
+>
+> **Other distros:** I don't use other distributions and won't be providing support for them. However, PRs adding support for other package managers are welcome!
+
 ## Prerequisites
 
 > **💡 Tip:** The installer automatically detects missing dependencies and offers to install them via `pacman`/`paru`/`yay`. You can skip manual installation and let the installer handle it!
