@@ -40,9 +40,7 @@ Singleton {
      * @returns { string }
      */
     function shellSingleQuoteEscape(str) {
-        return String(str)
-        // .replace(/\\/g, '\\\\')
-        .replace(/'/g, "'\\''");
+        return String(str).replace(/'/g, "'\\''");
     }
 
     /**
@@ -144,7 +142,6 @@ Singleton {
                 });
             }
         }
-        // console.log(JSON.stringify(result, null, 2));
         return result;
     }
 

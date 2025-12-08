@@ -12,10 +12,8 @@ StyledText {
         family: Appearance?.font.family.iconMaterial ?? "Material Symbols Rounded"
         pixelSize: iconSize
         weight: Font.Normal + (Font.DemiBold - Font.Normal) * truncatedFill
-        variableAxes: { 
+        variableAxes: {
             "FILL": truncatedFill,
-            // "wght": font.weight,
-            // "GRAD": 0,
             "opsz": iconSize,
         }
     }

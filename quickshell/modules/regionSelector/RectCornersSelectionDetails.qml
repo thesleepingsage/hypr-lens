@@ -47,8 +47,7 @@ Item {
         color: "transparent"
         border.color: root.color
         border.width: 2
-        // radius: root.standardRounding
-        radius: 0 // TODO: figure out how to make the overlay thing work with rounding
+        radius: 0
     }
 
     StyledText {
