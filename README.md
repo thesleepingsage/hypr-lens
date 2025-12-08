@@ -14,7 +14,8 @@
   <a href="#usage">Usage</a> •
   <a href="#configuration">Configuration</a> •
   <a href="#security">Security</a> •
-  <a href="#troubleshooting">Troubleshooting</a>
+  <a href="#troubleshooting">Troubleshooting</a> •
+  <a href="https://github.com/thesleepingsage/hypr-lens/wiki">Wiki</a>
 </p>
 
 <p align="center">
