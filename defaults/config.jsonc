@@ -1,0 +1,68 @@
+{
+  // ─── Appearance ─────────────────────────────────────────────
+  // Theme and visual settings
+  "appearance": {
+    // Path to matugen.json for dynamic theming (empty = ~/.config/quickshell/matugen.json)
+    "matugenPath": "",
+
+    // Button click ripple effect
+    "ripple": {
+      "usePrimaryColor": true,  // true = accent color, false = subtle gray
+      "colorMixRatio": 0.65,    // 0.0 = bold/visible, 1.0 = invisible
+      "solidRadius": 0.45,      // How far solid color extends (0.0-1.0)
+      "fadeRadius": 0.7         // Where fade ends (0.0-1.0)
+    }
+  },
+
+  // ─── Screenshots ────────────────────────────────────────────
+  "screenSnip": {
+    // Save location (empty = clipboard only)
+    // Example: "/home/user/Pictures/Screenshots"
+    "savePath": ""
+  },
+
+  // ─── Screen Recording ───────────────────────────────────────
+  "screenRecord": {
+    // Save location (empty = ~/Videos)
+    "savePath": ""
+  },
+
+  // ─── OCR (Text Extraction) ──────────────────────────────────
+  "ocr": {
+    "useCircleSelection": false  // true = circle tool, false = rectangle
+  },
+
+  // ─── Image Search ───────────────────────────────────────────
+  "search": {
+    "imageSearch": {
+      // Reverse image search URL (default: Google Lens)
+      // Alternatives: TinEye, Bing Visual Search
+      "imageSearchEngineBaseUrl": "https://lens.google.com/uploadbyurl?url=",
+      "useCircleSelection": false
+    }
+  },
+
+  // ─── Region Selector ────────────────────────────────────────
+  // Controls the selection overlay behavior
+  "regionSelector": {
+    // Auto-detection of clickable regions
+    "targetRegions": {
+      "windows": true,           // Detect window boundaries
+      "layers": false,           // Detect Hyprland layers (panels, bars)
+      "content": true,           // OpenCV content detection
+      "showLabel": false,        // Show labels on regions
+      "opacity": 0.3,            // Highlight opacity (0.0-1.0)
+      "contentRegionOpacity": 0.8,
+      "selectionPadding": 5      // Extra pixels around regions
+    },
+    // Rectangle selection tool
+    "rect": {
+      "showAimLines": true       // Show crosshair when drawing
+    },
+    // Circle selection tool
+    "circle": {
+      "strokeWidth": 6,          // Outline thickness
+      "padding": 10              // Extra space around selection
+    }
+  }
+}
