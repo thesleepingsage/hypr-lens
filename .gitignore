@@ -1,0 +1,82 @@
+# ─── Python ──────────────────────────────────────────────────────────────────
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+.python-version
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# ─── QuickShell / QML ────────────────────────────────────────────────────────
+# QML cache
+.qmlc
+*.qmlc
+qmlcache/
+
+# ─── Development ─────────────────────────────────────────────────────────────
+# Claude Code / AI assistant
+.claude/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ─── Build & Temp ────────────────────────────────────────────────────────────
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.log
+
+# ─── Project Specific ────────────────────────────────────────────────────────
+# Backups directory (development iterations, not for deployment)
+backups/
+
+# User-specific context memories (development notes)
+docs/
+
+# Runtime generated
+*.pid
+*.sock
+
+# Screenshots/recordings captured during testing
+test-captures/
+
+# ─── Secrets / Sensitive ─────────────────────────────────────────────────────
+# Never commit credentials
+*.pem
+*.key
+.env.local
+.env.*.local
+credentials.json
+secrets.json
