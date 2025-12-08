@@ -106,6 +106,15 @@ cd hypr-lens
 | Python venv | `~/.local/share/hypr-lens/venv/` (optional) |
 | Default config | `~/.config/hypr-lens/config.jsonc` |
 
+## Updating
+```bash
+# If hypr-lens is already installed...
+./hypr-lens-install.sh -d
+
+# or
+./hypr-lens-install.sh --update
+```
+
 ### Starting hypr-lens
 
 <details>
