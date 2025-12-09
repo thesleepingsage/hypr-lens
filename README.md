@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/thesleepingsage/hypr-lens/blob/main/assets/hyprland.svg" alt="hypr-lens logo" width="200">
+  <img src="https://github.com/thesleepingsage/hypr-lens/blob/main/assets/hypr-lens.svg" alt="hypr-lens logo" width="200">
 </p>
 
 <h1 align="center">hypr-lens</h1>
