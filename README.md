@@ -18,29 +18,17 @@
   <a href="https://github.com/thesleepingsage/hypr-lens/wiki">Wiki</a>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License">
-  <img src="https://img.shields.io/badge/Hyprland-0.52%2B-blue" alt="Hyprland">
-  <img src="https://img.shields.io/badge/quickshell-0.1.0%2B-green" alt="QuickShell">
-  <img src="https://img.shields.io/badge/platform-Linux-lightgrey" alt="Platform">
-  <img src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white" alt="Conventional Commits">
-</p>
-
 ---
 
 A standalone, portable toolkit extracted and refactored from [end-4's dotfiles](https://github.com/end-4/dots-hyprland) that provides a polished region selector UI with window detection, screenshot capture, OCR text extraction, Google Lens integration, and screen recording.
 
 ## Demo
 
-<p align="center">
+https://github.com/user-attachments/assets/63649b94-0a1a-4e07-8bc6-aea821ee9141
 
-https://github.com/user-attachments/assets/60e90405-0dde-4596-8af7-e518dd48e154
+https://github.com/user-attachments/assets/3a6c9366-843b-4533-9fd5-8d5b25a6e38c
 
-https://github.com/user-attachments/assets/06ccedb2-0605-4966-80d9-a4790c7dab97
-
-https://github.com/user-attachments/assets/5beb4d2e-33b7-434d-a5d1-cec9415b2b6b
-</p>
-
+https://github.com/user-attachments/assets/fefe32e0-5fb1-42b0-b46d-c96cba6490d8
 
 ## Features
 
