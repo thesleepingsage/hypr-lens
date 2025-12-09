@@ -24,11 +24,11 @@ A standalone, portable toolkit extracted and refactored from [end-4's dotfiles](
 
 ## Demo
 
-https://github.com/user-attachments/assets/3b1f7431-6a30-40ec-9347-7de51c665227
+https://github.com/user-attachments/assets/0191f340-a53d-498d-b978-56efb04c6a99
 
-https://github.com/user-attachments/assets/2350075c-ba13-47bf-88f8-d4bb1f1c9293
+https://github.com/user-attachments/assets/1ec9ff6b-895c-491a-8f31-b8178a137425
 
-https://github.com/user-attachments/assets/b2e8b1f6-986e-44f1-87e3-d606bb629d4d
+https://github.com/user-attachments/assets/02a46c78-d7ed-49ad-b773-82db2b22877f
 
 ## Features
 
