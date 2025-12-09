@@ -422,4 +422,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
 
 ## Stargazers over time
-[![Stargazers over time](https://starchart.cc/thesleepingsage/hypr-lens.svg?background=%23e7606000&axis=%232f81f7&line=%23e76060)](https://starchart.cc/thesleepingsage/hypr-lens)
+[![Stargazers over time](https://starchart.cc/thesleepingsage/hypr-lens.svg?background=%23e7606000&axis=%2302aef1&line=%2306d7d9)](https://starchart.cc/thesleepingsage/hypr-lens)
