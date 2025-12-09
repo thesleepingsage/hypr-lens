@@ -20,8 +20,24 @@ Toolbar {
     // Use a synchronizer on these
     property var action
     property var selectionMode
+    // Monitor list for full-screen capture buttons
+    property var monitors: []
     // Signals
     signal dismiss()
+    signal captureFullMonitor(string monitorName)
+
+    // Show monitor buttons only for screenshot/record modes (not OCR or Search)
+    readonly property bool showMonitorButtons: {
+        switch (action) {
+            case RegionSelection.SnipAction.Copy:
+            case RegionSelection.SnipAction.Edit:
+            case RegionSelection.SnipAction.Record:
+            case RegionSelection.SnipAction.RecordWithSound:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     MaterialShape {
         Layout.fillHeight: true
@@ -76,6 +92,22 @@ Toolbar {
         }
         onCurrentIndexChanged: {
             root.selectionMode = currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
+        }
+    }
+
+    // Monitor capture buttons - one-click full-screen capture for each monitor
+    Repeater {
+        model: root.showMonitorButtons ? root.monitors : []
+        delegate: ToolbarTabButton {
+            required property var modelData
+            required property int index
+            current: false
+            text: modelData.name
+            materialSymbol: "desktop_windows"
+            onClicked: root.captureFullMonitor(modelData.name)
+            StyledToolTip {
+                text: Translation.tr("Capture full screen: %1").arg(modelData.name)
+            }
         }
     }
 

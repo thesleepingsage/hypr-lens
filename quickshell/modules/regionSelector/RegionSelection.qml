@@ -26,11 +26,43 @@ PanelWindow {
         bottom: true
     }
 
-    enum SnipAction { Copy, Edit, Search, CharRecognition, Record, RecordWithSound } 
+    enum SnipAction { Copy, Edit, Search, CharRecognition, Record, RecordWithSound }
     enum SelectionMode { RectCorners, Circle }
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
     signal dismiss()
+
+    // Monitor capture support
+    property var allMonitors: []
+    property string targetMonitorCapture: ""
+    signal captureMonitorRequested(string monitorName)
+
+    // Watch for cross-monitor capture requests (only when UI is visible and ready)
+    onTargetMonitorCaptureChanged: {
+        if (!root.visible || targetMonitorCapture === "" || targetMonitorCapture !== root.hyprlandMonitor.name) return;
+        captureFullMonitorLocal();
+    }
+
+    // Capture the full region of this monitor
+    function captureFullMonitorLocal() {
+        dragState.regionX = 0;
+        dragState.regionY = 0;
+        dragState.regionWidth = root.screen.width;
+        dragState.regionHeight = root.screen.height;
+        dragState.endDrag();
+        root.snip();
+    }
+
+    // Handle monitor button click - capture full screen of the specified monitor
+    function captureFullMonitor(monitorName: string) {
+        if (monitorName === root.hyprlandMonitor.name) {
+            // This is our monitor, capture locally
+            captureFullMonitorLocal();
+        } else {
+            // Request parent to coordinate capture on the target monitor
+            root.captureMonitorRequested(monitorName);
+        }
+    }
     
     property string saveScreenshotDir: Config.options.screenSnip.savePath !== ""
                                        ? Config.options.screenSnip.savePath
@@ -370,6 +402,7 @@ PanelWindow {
                 spacing: 6
 
                 OptionsToolbar {
+                    monitors: root.allMonitors
                     Synchronizer on action {
                         property alias source: root.action
                     }
@@ -377,6 +410,7 @@ PanelWindow {
                         property alias source: root.selectionMode
                     }
                     onDismiss: root.dismiss();
+                    onCaptureFullMonitor: (monitorName) => root.captureFullMonitor(monitorName)
                 }
                 Item {
                     anchors {

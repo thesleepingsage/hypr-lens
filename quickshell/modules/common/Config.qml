@@ -76,6 +76,11 @@ Singleton {
                 }
             }
 
+            // ─── Monitor Order ───────────────────────────────────────────
+            // Monitor button order for full-screen capture (empty = auto-detect)
+            // Example: ["DP-2", "DP-1"] to show DP-2 first
+            property var monitorOrder: []
+
             // ─── Region Selector ──────────────────────────────────────────
             property JsonObject regionSelector: JsonObject {
                 // Auto-detection of clickable regions
