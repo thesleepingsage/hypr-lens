@@ -30,13 +30,17 @@
 
 A standalone, portable toolkit extracted and refactored from [end-4's dotfiles](https://github.com/end-4/dots-hyprland) that provides a polished region selector UI with window detection, screenshot capture, OCR text extraction, Google Lens integration, and screen recording.
 
-<!--
-## Screenshots
+## Demo
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/thesleepingsage/hypr-lens/main/assets/screenshot-region.png" alt="Region selector" width="600">
+
+https://github.com/user-attachments/assets/60e90405-0dde-4596-8af7-e518dd48e154
+
+https://github.com/user-attachments/assets/06ccedb2-0605-4966-80d9-a4790c7dab97
+
+https://github.com/user-attachments/assets/5beb4d2e-33b7-434d-a5d1-cec9415b2b6b
 </p>
--->
+
 
 ## Features
 
