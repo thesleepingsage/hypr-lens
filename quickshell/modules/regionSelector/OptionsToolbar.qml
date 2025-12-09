@@ -13,7 +13,8 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-// Options toolbar
+// Options toolbar for region selector
+// Displays action icon, selection mode tabs, and monitor capture buttons
 Toolbar {
     id: root
 
@@ -26,61 +27,29 @@ Toolbar {
     signal dismiss()
     signal captureFullMonitor(string monitorName)
 
-    // Show monitor buttons only for screenshot/record modes (not OCR or Search)
-    readonly property bool showMonitorButtons: {
-        switch (action) {
-            case RegionSelection.SnipAction.Copy:
-            case RegionSelection.SnipAction.Edit:
-            case RegionSelection.SnipAction.Record:
-            case RegionSelection.SnipAction.RecordWithSound:
-                return true;
-            default:
-                return false;
-        }
-    }
+    // Use ActionConfig singleton for action metadata
+    readonly property var actionConfig: ActionConfig.getConfig(root.action)
+    readonly property bool showMonitorButtons: actionConfig.allowsMonitorButtons
 
+    // Action indicator shape
     MaterialShape {
         Layout.fillHeight: true
         Layout.leftMargin: 2
         Layout.rightMargin: 2
         implicitSize: 36 // Intentionally smaller because this one is brighter than others
-        shape: switch (root.action) {
-            case RegionSelection.SnipAction.Copy:
-            case RegionSelection.SnipAction.Edit:
-                return MaterialShape.Shape.Cookie4Sided;
-            case RegionSelection.SnipAction.Search:
-                return MaterialShape.Shape.Pentagon;
-            case RegionSelection.SnipAction.CharRecognition:
-                return MaterialShape.Shape.Sunny;
-            case RegionSelection.SnipAction.Record:
-            case RegionSelection.SnipAction.RecordWithSound:
-                return MaterialShape.Shape.Gem;
-            default:
-                return MaterialShape.Shape.Cookie12Sided;
-        }
+        shape: root.actionConfig.shape
         color: Appearance.colors.colPrimary
+
         MaterialSymbol {
             anchors.centerIn: parent
             iconSize: 22
             color: Appearance.colors.colOnPrimary
             animateChange: true
-            text: switch (root.action) {
-                case RegionSelection.SnipAction.Copy:
-                case RegionSelection.SnipAction.Edit:
-                    return "content_cut";
-                case RegionSelection.SnipAction.Search:
-                    return "image_search";
-                case RegionSelection.SnipAction.CharRecognition:
-                    return "document_scanner";
-                case RegionSelection.SnipAction.Record:
-                case RegionSelection.SnipAction.RecordWithSound:
-                    return "videocam";
-                default:
-                    return "";
-            }
+            text: root.actionConfig.icon
         }
     }
 
+    // Selection mode tabs (Rect/Circle)
     ToolbarTabBar {
         id: tabBar
         tabButtonList: [
@@ -98,17 +67,10 @@ Toolbar {
     // Monitor capture buttons - one-click full-screen capture for each monitor
     Repeater {
         model: root.showMonitorButtons ? root.monitors : []
-        delegate: ToolbarTabButton {
+        delegate: MonitorButton {
             required property var modelData
-            required property int index
-            current: false
-            text: modelData.name
-            materialSymbol: "desktop_windows"
-            onClicked: root.captureFullMonitor(modelData.name)
-            StyledToolTip {
-                text: Translation.tr("Capture full screen: %1").arg(modelData.name)
-            }
+            monitor: modelData
+            onCaptureRequested: (name) => root.captureFullMonitor(name)
         }
     }
-
 }

@@ -3,6 +3,7 @@ import "../common"
 import "../common/functions"
 import "../common/widgets"
 import "../../services"
+import "RegionUtils.js" as RegionUtils
 import QtQuick
 import QtQuick.Controls
 import Qt.labs.synchronizer
@@ -176,6 +177,23 @@ PanelWindow {
         }
     }
 
+    // Table of command builders indexed by SnipAction enum value.
+    // Each builder takes (rx, ry, rw, rh, absX, absY) and returns a command array.
+    readonly property var commandBuilders: ({
+        0: (rx, ry, rw, rh, absX, absY) =>
+            SnipCommands.buildCopyCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir),
+        1: (rx, ry, rw, rh, absX, absY) =>
+            SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh),
+        2: (rx, ry, rw, rh, absX, absY) =>
+            SnipCommands.buildSearchCommand(root.screenshotPath, rx, ry, rw, rh, "https://lens.google.com"),
+        3: (rx, ry, rw, rh, absX, absY) =>
+            SnipCommands.buildOcrCommand(root.screenshotPath, rx, ry, rw, rh),
+        4: (rx, ry, rw, rh, absX, absY) =>
+            SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, false),
+        5: (rx, ry, rw, rh, absX, absY) =>
+            SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, true)
+    })
+
     function snip() {
         // Validity check
         if (dragState.regionWidth <= 0 || dragState.regionHeight <= 0) {
@@ -184,56 +202,40 @@ PanelWindow {
             return;
         }
 
-        // Clamp region to screen bounds
-        dragState.regionX = Math.max(0, Math.min(dragState.regionX, root.screen.width - dragState.regionWidth));
-        dragState.regionY = Math.max(0, Math.min(dragState.regionY, root.screen.height - dragState.regionHeight));
-        dragState.regionWidth = Math.max(0, Math.min(dragState.regionWidth, root.screen.width - dragState.regionX));
-        dragState.regionHeight = Math.max(0, Math.min(dragState.regionHeight, root.screen.height - dragState.regionY));
+        // Clamp region to screen bounds using utility function
+        const clamped = RegionUtils.clampRegionToScreen({
+            x: dragState.regionX,
+            y: dragState.regionY,
+            width: dragState.regionWidth,
+            height: dragState.regionHeight
+        }, root.screen.width, root.screen.height);
+        dragState.regionX = clamped.x;
+        dragState.regionY = clamped.y;
+        dragState.regionWidth = clamped.width;
+        dragState.regionHeight = clamped.height;
 
-        // Adjust action based on mouse button
+        // Adjust action based on mouse button (right-click = edit)
         if (root.action === RegionSelection.SnipAction.Copy || root.action === RegionSelection.SnipAction.Edit) {
             root.action = dragState.mouseButton === Qt.RightButton ? RegionSelection.SnipAction.Edit : RegionSelection.SnipAction.Copy;
         }
 
-        // Scale coordinates to physical pixels
-        const rx = Math.round(dragState.regionX * root.monitorScale);
-        const ry = Math.round(dragState.regionY * root.monitorScale);
-        const rw = Math.round(dragState.regionWidth * root.monitorScale);
-        const rh = Math.round(dragState.regionHeight * root.monitorScale);
-        // Absolute coordinates for recording (add monitor offset)
+        // Scale coordinates to physical pixels (monitors may have non-1x scaling)
+        const rx = Math.round(clamped.x * root.monitorScale);
+        const ry = Math.round(clamped.y * root.monitorScale);
+        const rw = Math.round(clamped.width * root.monitorScale);
+        const rh = Math.round(clamped.height * root.monitorScale);
+        // Absolute coordinates for recording (add monitor offset for multi-monitor setups)
         const absX = rx + Math.round(root.monitorOffsetX * root.monitorScale);
         const absY = ry + Math.round(root.monitorOffsetY * root.monitorScale);
 
-        // Build command using SnipCommands singleton
-        switch (root.action) {
-            case RegionSelection.SnipAction.Copy:
-                snipProc.command = SnipCommands.buildCopyCommand(
-                    root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir
-                );
-                break;
-            case RegionSelection.SnipAction.Edit:
-                snipProc.command = SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh);
-                break;
-            case RegionSelection.SnipAction.Search:
-                snipProc.command = SnipCommands.buildSearchCommand(
-                    root.screenshotPath, rx, ry, rw, rh,
-                    "https://lens.google.com"  // Clipboard-based: user pastes with Ctrl+V
-                );
-                break;
-            case RegionSelection.SnipAction.CharRecognition:
-                snipProc.command = SnipCommands.buildOcrCommand(root.screenshotPath, rx, ry, rw, rh);
-                break;
-            case RegionSelection.SnipAction.Record:
-                snipProc.command = SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, false);
-                break;
-            case RegionSelection.SnipAction.RecordWithSound:
-                snipProc.command = SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, true);
-                break;
-            default:
-                console.warn("[Region Selector] Unknown snip action, skipping snip.");
-                root.dismiss();
-                return;
+        // Build command using table-driven approach
+        const builder = commandBuilders[root.action];
+        if (!builder) {
+            console.warn("[Region Selector] Unknown snip action, skipping snip.");
+            root.dismiss();
+            return;
         }
+        snipProc.command = builder(rx, ry, rw, rh, absX, absY);
 
         snipProc.startDetached();
         root.dismiss();
@@ -375,31 +377,35 @@ PanelWindow {
                 targetedRegionHeight: dragState.targetedRegionHeight
             }
 
-            // Controls
+            // Controls - slides up from bottom when visible
             Row {
                 id: regionSelectionControls
                 z: 9999
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     bottom: parent.bottom
-                    bottomMargin: -height
-                }
-                opacity: 0
-                Connections {
-                    target: root
-                    function onVisibleChanged() {
-                        if (!visible) return;
-                        regionSelectionControls.anchors.bottomMargin = 8;
-                        regionSelectionControls.opacity = 1;
-                    }
-                }
-                Behavior on opacity {
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                }
-                Behavior on anchors.bottomMargin {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                 }
                 spacing: 6
+
+                // Slide-in animation using state binding
+                state: root.visible ? "visible" : "hidden"
+                states: [
+                    State {
+                        name: "hidden"
+                        PropertyChanges { target: regionSelectionControls; opacity: 0; anchors.bottomMargin: -regionSelectionControls.height }
+                    },
+                    State {
+                        name: "visible"
+                        PropertyChanges { target: regionSelectionControls; opacity: 1; anchors.bottomMargin: 8 }
+                    }
+                ]
+                transitions: [
+                    Transition {
+                        from: "hidden"; to: "visible"
+                        NumberAnimation { property: "opacity"; duration: 150; easing.type: Easing.OutQuad }
+                        NumberAnimation { property: "anchors.bottomMargin"; duration: 200; easing.type: Easing.OutCubic }
+                    }
+                ]
 
                 OptionsToolbar {
                     monitors: root.allMonitors

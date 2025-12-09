@@ -4,6 +4,7 @@ import "../common"
 import "../common/functions"
 import "../common/widgets"
 import "../../services"
+import "RegionUtils.js" as RegionUtils
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -14,21 +15,22 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import Quickshell.Hyprland
 
+// Main region selector scope
+// Manages the overlay window(s) for selecting screen regions
 Scope {
     id: root
 
     function dismiss() {
         GlobalStates.regionSelectorOpen = false
-        root.targetMonitorCapture = ""  // Reset cross-monitor capture state
+        root.targetMonitorCapture = ""
     }
 
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
 
-    // Monitor list - updated imperatively when config loads
+    // ─── Monitor List Management ─────────────────────────────────────────────────
     property var monitorList: []
 
-    // Read monitor order from config and rebuild monitor list
     FileView {
         id: monitorOrderFileView
         path: Directories.shellConfigPath
@@ -37,59 +39,33 @@ Scope {
 
     Component.onCompleted: rebuildMonitorList()
 
+    // Builds the monitor list from Quickshell.screens and applies custom ordering.
+    // Uses regex to parse monitorOrder from JSONC config (handles comments/trailing commas).
     function rebuildMonitorList() {
-        let customOrder = [];
-        try {
-            const rawText = monitorOrderFileView.text();
-            // Extract monitorOrder array directly with regex
-            const match = rawText.match(/"monitorOrder"\s*:\s*\[([^\]]*)\]/);
-            if (match && match[1]) {
-                // Parse the array contents: "DP-1", "DP-3", "DP-2"
-                const items = match[1].match(/"([^"]+)"/g);
-                if (items) {
-                    customOrder = items.map(s => s.replace(/"/g, ''));
-                }
-            }
-        } catch (e) {
-            customOrder = [];
-        }
+        // Parse custom order from config
+        const rawText = monitorOrderFileView.text();
+        const customOrder = RegionUtils.parseMonitorOrder(rawText);
 
+        // Build monitor info list
         let list = [];
         for (let i = 0; i < Quickshell.screens.length; i++) {
             const screen = Quickshell.screens[i];
             const monitor = Hyprland.monitorFor(screen);
-            list.push({
-                name: monitor.name,
-                x: monitor.x,
-                y: monitor.y,
-                width: screen.width,
-                height: screen.height,
-                scale: monitor.scale
-            });
+            list.push(RegionUtils.buildMonitorInfo(screen, monitor));
         }
 
-        // Apply custom ordering from config if specified
-        if (customOrder && customOrder.length > 0) {
-            list.sort((a, b) => {
-                const aIndex = customOrder.indexOf(a.name);
-                const bIndex = customOrder.indexOf(b.name);
-                if (aIndex === -1 && bIndex === -1) return 0;
-                if (aIndex === -1) return 1;
-                if (bIndex === -1) return -1;
-                return aIndex - bIndex;
-            });
-        }
-
-        root.monitorList = list;
+        // Apply custom ordering
+        root.monitorList = RegionUtils.sortMonitorsByOrder(list, customOrder);
     }
 
-    // Cross-monitor capture coordination: set this to trigger capture on that monitor
+    // ─── Cross-Monitor Capture Coordination ──────────────────────────────────────
     property string targetMonitorCapture: ""
 
     function captureMonitor(monitorName: string) {
         root.targetMonitorCapture = monitorName;
     }
-    
+
+    // ─── Region Selection Windows ────────────────────────────────────────────────
     Variants {
         model: Quickshell.screens
         delegate: Loader {
@@ -109,64 +85,48 @@ Scope {
         }
     }
 
-    function screenshot() {
-        root.action = RegionSelection.SnipAction.Copy
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
+    // ─── Action Launcher ─────────────────────────────────────────────────────────
+    // Opens the region selector with the specified action.
+    // Selection mode is determined by config or defaults to RectCorners.
+    function openWithAction(action) {
+        root.action = action;
+        root.selectionMode = getSelectionModeForAction(action);
+        GlobalStates.regionSelectorOpen = true;
     }
 
-    function search() {
-        root.action = RegionSelection.SnipAction.Search
-        if (Config.options.search.imageSearch.useCircleSelection) {
-            root.selectionMode = RegionSelection.SelectionMode.Circle
-        } else {
-            root.selectionMode = RegionSelection.SelectionMode.RectCorners
+    // Determines the selection mode for an action based on config settings.
+    // Note: Direct property access is required for QML JsonObject compatibility.
+    function getSelectionModeForAction(action) {
+        let useCircle = false;
+        switch (action) {
+            case RegionSelection.SnipAction.Search:
+                useCircle = Config.options.search?.imageSearch?.useCircleSelection ?? false;
+                break;
+            case RegionSelection.SnipAction.CharRecognition:
+                useCircle = Config.options.ocr?.useCircleSelection ?? false;
+                break;
         }
-        GlobalStates.regionSelectorOpen = true
+        return useCircle ? RegionSelection.SelectionMode.Circle : RegionSelection.SelectionMode.RectCorners;
     }
 
-    function ocr() {
-        root.action = RegionSelection.SnipAction.CharRecognition
-        if (Config.options.ocr?.useCircleSelection) {
-            root.selectionMode = RegionSelection.SelectionMode.Circle
-        } else {
-            root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        }
-        GlobalStates.regionSelectorOpen = true
-    }
+    // Thin wrappers for IPC and shortcut compatibility
+    function screenshot() { openWithAction(RegionSelection.SnipAction.Copy); }
+    function search() { openWithAction(RegionSelection.SnipAction.Search); }
+    function ocr() { openWithAction(RegionSelection.SnipAction.CharRecognition); }
+    function record() { openWithAction(RegionSelection.SnipAction.Record); }
+    function recordWithSound() { openWithAction(RegionSelection.SnipAction.RecordWithSound); }
 
-    function record() {
-        root.action = RegionSelection.SnipAction.Record
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
-    }
-
-    function recordWithSound() {
-        root.action = RegionSelection.SnipAction.RecordWithSound
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
-    }
-
+    // ─── IPC Handler ─────────────────────────────────────────────────────────────
     IpcHandler {
         target: "region"
-
-        function screenshot() {
-            root.screenshot()
-        }
-        function search() {
-            root.search()
-        }
-        function ocr() {
-            root.ocr()
-        }
-        function record() {
-            root.record()
-        }
-        function recordWithSound() {
-            root.recordWithSound()
-        }
+        function screenshot() { root.screenshot(); }
+        function search() { root.search(); }
+        function ocr() { root.ocr(); }
+        function record() { root.record(); }
+        function recordWithSound() { root.recordWithSound(); }
     }
 
+    // ─── Global Shortcuts ────────────────────────────────────────────────────────
     GlobalShortcut {
         name: "regionScreenshot"
         description: "Takes a screenshot of the selected region"

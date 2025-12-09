@@ -1,9 +1,11 @@
+singleton ActionConfig 1.0 ActionConfig.qml
 singleton RegionFunctions 1.0 RegionFunctions.qml
 singleton SnipCommands 1.0 SnipCommands.qml
 RegionSelector 1.0 RegionSelector.qml
 RegionSelection 1.0 RegionSelection.qml
 RegionDragState 1.0 RegionDragState.qml
 TargetRegionRepeater 1.0 TargetRegionRepeater.qml
+MonitorButton 1.0 MonitorButton.qml
 OptionsToolbar 1.0 OptionsToolbar.qml
 TargetRegion 1.0 TargetRegion.qml
 CircleSelectionDetails 1.0 CircleSelectionDetails.qml
