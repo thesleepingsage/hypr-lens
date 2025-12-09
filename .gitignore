@@ -61,6 +61,7 @@ Thumbs.db
 # ─── Project Specific ────────────────────────────────────────────────────────
 # Backups directory (development iterations, not for deployment)
 backups/
+assets/
 
 # User-specific context memories (development notes)
 docs/
