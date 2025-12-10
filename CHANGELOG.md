@@ -7,7 +7,7 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 ## [Unreleased]
 
-## [1.0.0] - 2025-12-08
+## 1.0.0 - 2025-12-08
 
 Initial public release! 🎉
 
@@ -40,7 +40,7 @@ Initial public release! 🎉
 | Color Picker | `Super+Shift+C` |
 | Quick Fullscreen | `Print` |
 
-## [1.1.0] - 2025-12-08
+## 1.1.0 - 2025-12-08
 
 ### Added
 
@@ -55,7 +55,7 @@ Initial public release! 🎉
 - **Installer Recovery** - Detect and recover missing shell integration during update mode
 - **Invalid Input Handling** - Improved input validation in integration recovery flow
 
-## [1.2.0] - 2025-12-08
+## 1.2.0 - 2025-12-08
 
 ### Added
 
@@ -76,7 +76,7 @@ Initial public release! 🎉
 | 1.1.0 | 2025-12-08 | Monitor capture buttons, installer recovery |
 | 1.0.0 | 2025-12-08 | Initial release |
 
-[Unreleased]: https://github.com/thesleepingsage/hypr-lens/compare/main...HEAD
-[1.2.0]: https://github.com/thesleepingsage/hypr-lens/releases/tag/v1.2.0
-[1.1.0]: https://github.com/thesleepingsage/hypr-lens/releases/tag/v1.1.0
+Unreleased: https://github.com/thesleepingsage/hypr-lens/compare/main...HEAD
+1.2.0: https://github.com/thesleepingsage/hypr-lens/releases/tag/v1.2.0
+1.1.0: https://github.com/thesleepingsage/hypr-lens/releases/tag/v1.1.0
 [1.0.0]: https://github.com/thesleepingsage/hypr-lens/releases/tag/v1.0.0
