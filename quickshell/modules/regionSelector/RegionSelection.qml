@@ -64,6 +64,12 @@ PanelWindow {
             root.captureMonitorRequested(monitorName);
         }
     }
+
+    // Handle monitor button right-click - capture full screen and edit with swappy
+    function editFullMonitor(monitorName: string) {
+        root.action = RegionSelection.SnipAction.Edit;
+        captureFullMonitor(monitorName);
+    }
     
     property string saveScreenshotDir: Config.options.screenSnip.savePath !== ""
                                        ? Config.options.screenSnip.savePath
@@ -180,17 +186,17 @@ PanelWindow {
     // Table of command builders indexed by SnipAction enum value.
     // Each builder takes (rx, ry, rw, rh, absX, absY) and returns a command array.
     readonly property var commandBuilders: ({
-        0: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.Copy]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildCopyCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir),
-        1: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.Edit]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh),
-        2: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.Search]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildSearchCommand(root.screenshotPath, rx, ry, rw, rh, "https://lens.google.com"),
-        3: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.CharRecognition]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildOcrCommand(root.screenshotPath, rx, ry, rw, rh),
-        4: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.Record]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, false),
-        5: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.RecordWithSound]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, true)
     })
 
@@ -215,7 +221,8 @@ PanelWindow {
         dragState.regionHeight = clamped.height;
 
         // Adjust action based on mouse button (right-click = edit)
-        if (root.action === RegionSelection.SnipAction.Copy || root.action === RegionSelection.SnipAction.Edit) {
+        // Only override if action is Copy - if already Edit (e.g., from monitor button right-click), keep it
+        if (root.action === RegionSelection.SnipAction.Copy) {
             root.action = dragState.mouseButton === Qt.RightButton ? RegionSelection.SnipAction.Edit : RegionSelection.SnipAction.Copy;
         }
 
@@ -284,15 +291,7 @@ PanelWindow {
                 // Circle dragging?
                 else if (root.selectionMode === RegionSelection.SelectionMode.Circle) {
                     const padding = Config.options.regionSelector.circle.padding + Config.options.regionSelector.circle.strokeWidth / 2;
-                    const dragPoints = (dragState.points.length > 0) ? dragState.points : [{ x: mouseArea.mouseX, y: mouseArea.mouseY }];
-                    const maxX = Math.max(...dragPoints.map(p => p.x));
-                    const minX = Math.min(...dragPoints.map(p => p.x));
-                    const maxY = Math.max(...dragPoints.map(p => p.y));
-                    const minY = Math.min(...dragPoints.map(p => p.y));
-                    dragState.regionX = minX - padding;
-                    dragState.regionY = minY - padding;
-                    dragState.regionWidth = maxX - minX + padding * 2;
-                    dragState.regionHeight = maxY - minY + padding * 2;
+                    dragState.setRegionFromCirclePoints(padding, mouseArea.mouseX, mouseArea.mouseY);
                 }
                 dragState.endDrag();
                 root.snip();
@@ -417,6 +416,7 @@ PanelWindow {
                     }
                     onDismiss: root.dismiss();
                     onCaptureFullMonitor: (monitorName) => root.captureFullMonitor(monitorName)
+                    onEditFullMonitor: (monitorName) => root.editFullMonitor(monitorName)
                 }
                 Item {
                     anchors {

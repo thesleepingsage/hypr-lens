@@ -26,6 +26,7 @@ Toolbar {
     // Signals
     signal dismiss()
     signal captureFullMonitor(string monitorName)
+    signal editFullMonitor(string monitorName)
 
     // Use ActionConfig singleton for action metadata
     readonly property var actionConfig: ActionConfig.getConfig(root.action)
@@ -65,12 +66,15 @@ Toolbar {
     }
 
     // Monitor capture buttons - one-click full-screen capture for each monitor
+    // Left-click: capture and copy to clipboard
+    // Right-click: capture and edit with swappy
     Repeater {
         model: root.showMonitorButtons ? root.monitors : []
         delegate: MonitorButton {
             required property var modelData
             monitor: modelData
             onCaptureRequested: (name) => root.captureFullMonitor(name)
+            onEditRequested: (name) => root.editFullMonitor(name)
         }
     }
 }

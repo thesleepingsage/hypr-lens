@@ -90,4 +90,19 @@ QtObject {
         points = [];
         clearTargetedRegion();
     }
+
+    // Compute bounding box from circle selection points
+    // padding: extra space around the bounding box
+    // fallbackX, fallbackY: coordinates to use if no points recorded
+    function setRegionFromCirclePoints(padding: real, fallbackX: real, fallbackY: real) {
+        const dragPoints = (points.length > 0) ? points : [{ x: fallbackX, y: fallbackY }];
+        const maxX = Math.max(...dragPoints.map(p => p.x));
+        const minX = Math.min(...dragPoints.map(p => p.x));
+        const maxY = Math.max(...dragPoints.map(p => p.y));
+        const minY = Math.min(...dragPoints.map(p => p.y));
+        regionX = minX - padding;
+        regionY = minY - padding;
+        regionWidth = maxX - minX + padding * 2;
+        regionHeight = maxY - minY + padding * 2;
+    }
 }
