@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import "../common"
 import "../common/widgets"
+import "../../services"
 import QtQuick
 
 // Button for one-click full-screen capture of a specific monitor.
@@ -24,6 +25,6 @@ ToolbarTabButton {
     altAction: () => root.editRequested(monitor.name)
 
     StyledToolTip {
-        text: Translation.tr("Capture %1 (right-click to edit)").arg(root.monitor.name)
+        text: Translation.tr("Click to capture, right-click to edit")
     }
 }
