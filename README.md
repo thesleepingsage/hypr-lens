@@ -49,7 +49,7 @@ https://github.com/user-attachments/assets/02a46c78-d7ed-49ad-b773-82db2b22877f
 >
 > This project is developed and tested exclusively on Arch Linux. The installer uses `pacman`/`paru`/`yay` and assumes an Arch-based system.
 >
-> **Other distros:** I don't use other distributions and won't be providing support for them. However, PRs adding support for other package managers are welcome!
+> **Other distros (NixOS, Fedora, etc.):** Manual installation is possible by installing the [dependencies](#prerequisites) through your package manager and copying the files to the appropriate locations. The installer script is Arch-centric and won't work out of the box, but the QML components themselves are distro-agnostic. PRs adding support for other package managers are welcome!
 
 ## Prerequisites
 
