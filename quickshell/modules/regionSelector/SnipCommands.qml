@@ -59,7 +59,7 @@ Singleton {
 
         if (!alsoSave) {
             return ["bash", "-c", `${cropToStdout} | wl-copy && \
-            ${buildNotify("Copied to clipboard", "")} && \
+            ${buildNotify("hypr-lens", "Copied to clipboard")} && \
             ${cleanup}`];
         }
 
@@ -69,15 +69,16 @@ Singleton {
             `${buildSaveSetup(expandedSaveDir)} && \
             ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
             if [ -f "$savePath" ]; then \
-                ${buildNotify("Saved", "Screenshot saved to $savePath")}; \
+                ${buildNotify("hypr-lens", "Saved to $savePath")}; \
             else \
-                ${buildNotify("Copy failed", "Could not save screenshot")}; \
+                ${buildNotify("hypr-lens", "Failed to save screenshot")}; \
             fi && \
             ${cleanup}`
         ];
     }
 
     // Edit with swappy (always saves to disk - uses default path if empty)
+    // Uses background file watcher for instant save notifications
     function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
         const cropToStdout = `${cropBase} -`;
@@ -87,10 +88,21 @@ Singleton {
         return [
             "bash", "-c",
             `${buildSaveSetup(expandedSaveDir)} && \
+            ( \
+                lastMod=""; \
+                while true; do \
+                    if [ -f "$savePath" ]; then \
+                        currentMod=$(stat -c %Y "$savePath" 2>/dev/null); \
+                        if [ "$currentMod" != "$lastMod" ]; then \
+                            ${buildNotify("hypr-lens", "Saved to $savePath")}; \
+                            lastMod="$currentMod"; \
+                        fi; \
+                    fi; \
+                    sleep 0.3; \
+                done \
+            ) & watcherPid=$! && \
             ${cropToStdout} | swappy -f - -o "$savePath"; \
-            if [ -f "$savePath" ]; then \
-                ${buildNotify("Saved", "Screenshot saved to $savePath")}; \
-            fi; \
+            kill $watcherPid 2>/dev/null; \
             ${cleanup}`
         ];
     }
