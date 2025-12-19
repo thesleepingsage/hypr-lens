@@ -25,13 +25,16 @@ get_active_monitor() {
     hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'
 }
 
-# Configuration
-CUSTOM_PATH=$(jq -r "$JSON_PATH" "$CONFIG_FILE" 2>/dev/null)
+# Configuration (strip // comments from JSONC before parsing)
+CUSTOM_PATH=$(sed 's|//.*||g' "$CONFIG_FILE" 2>/dev/null | jq -r "$JSON_PATH" 2>/dev/null)
 if [[ -n "$CUSTOM_PATH" && "$CUSTOM_PATH" != "null" ]]; then
     RECORDING_DIR="$CUSTOM_PATH"
 else
-    RECORDING_DIR="$HOME/Videos"
+    RECORDING_DIR="$HOME/Videos/hypr-lens"
 fi
+
+# Expand ~ to $HOME (tilde doesn't expand when read from config file)
+RECORDING_DIR="${RECORDING_DIR/#\~/$HOME}"
 
 mkdir -p "$RECORDING_DIR"
 cd "$RECORDING_DIR" || exit

@@ -56,12 +56,13 @@ Singleton {
 
             // ─── Screenshots ──────────────────────────────────────────────
             property JsonObject screenSnip: JsonObject {
-                property string savePath: ""  // Save location (empty = clipboard only)
+                property string savePath: ""  // Save location (empty = ~/Pictures/hypr-lens)
+                property bool copyAlsoSaves: false  // true = Copy mode also saves to disk, false = clipboard only
             }
 
             // ─── Screen Recording ─────────────────────────────────────────
             property JsonObject screenRecord: JsonObject {
-                property string savePath: ""  // Save location (empty = ~/Videos)
+                property string savePath: ""  // Save location (empty = ~/Videos/hypr-lens)
             }
 
             // ─── OCR ──────────────────────────────────────────────────────

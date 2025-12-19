@@ -53,6 +53,42 @@ Initial public release! 🎉
 - **Installer Recovery** - Detect and recover missing shell integration during update mode
 - **Invalid Input Handling** - Improved input validation in integration recovery flow
 
+## 1.4.0 - 2025-12-19
+
+### Fixed
+
+- **Screenshot Save Path** - Screenshots and edited images now properly save to configured `savePath`
+- **Tilde Expansion** - `~/` paths now correctly expand in all save path configurations
+- **Swappy Integration** - Edit mode (swappy) now saves to configured path instead of default Desktop
+- **Config Parsing** - Changed config format from JSONC to JSON for reliable parsing
+
+### Added
+
+- **Default Save Paths** - Screenshots default to `~/Pictures/hypr-lens`, recordings to `~/Videos/hypr-lens`
+- **Copy Also Saves Option** - New `copyAlsoSaves` config option for users who want left-click to also save
+
+### Changed
+
+- **Copy Mode Behavior** - Left-click (Copy) now only copies to clipboard by default; use Edit mode (right-click) or enable `copyAlsoSaves` to save files
+
+---
+
+## 1.3.0 - 2025-12-16
+
+### Added
+
+- **Right-Click Edit on Monitor Buttons** - Right-click monitor buttons to capture and edit with swappy
+
+### Fixed
+
+- **MonitorButton Tooltip** - Fixed missing services import for tooltip functionality
+
+### Changed
+
+- **Documentation** - Clarified compatibility notes for non-Arch distributions
+
+---
+
 ## 1.2.0 - 2025-12-08
 
 ### Added
@@ -70,6 +106,8 @@ Initial public release! 🎉
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.4.0 | 2025-12-19 | Screenshot save fix, tilde expansion, swappy integration |
+| 1.3.0 | 2025-12-16 | Right-click edit on monitor buttons |
 | 1.2.0 | 2025-12-08 | Demo videos, security documentation |
 | 1.1.0 | 2025-12-08 | Monitor capture buttons, installer recovery |
 | 1.0.0 | 2025-12-08 | Initial release |

@@ -23,7 +23,7 @@ The installer only touches files in your user directories:
 | Path | Action | Purpose |
 |------|--------|---------|
 | `~/.config/quickshell/hypr-lens/` | Create | QML modules (UI components) |
-| `~/.config/hypr-lens/config.jsonc` | Create | User configuration file |
+| `~/.config/hypr-lens/config.json` | Create | User configuration file |
 | `~/.local/share/hypr-lens/scripts/` | Create | Helper scripts (OpenCV, recording) |
 | `~/.local/share/hypr-lens/venv/` | Create (optional) | Python venv for content detection |
 | `~/.config/quickshell/shell.qml` | Modify (optional) | Integration (with timestamped backup) |

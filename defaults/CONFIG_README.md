@@ -44,9 +44,14 @@ Screenshot settings.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `savePath` | `""` | Where to save screenshots. Empty = clipboard only |
+| `savePath` | `""` | Where to save screenshots. Empty = `~/Pictures/hypr-lens` |
+| `copyAlsoSaves` | `false` | If `true`, Copy mode (left-click) also saves to disk. If `false`, only Edit mode (swappy) saves. |
 
-**Example:** `"/home/user/Pictures/Screenshots"`
+**Behavior:**
+- **Left-click (Copy)**: Copies to clipboard only (unless `copyAlsoSaves` is `true`)
+- **Right-click (Edit)**: Opens swappy for annotation, then saves to `savePath`
+
+**Example:** `"/home/user/Pictures/Screenshots"` or `"~/Pictures/Screenshots"`
 
 ---
 
@@ -56,7 +61,7 @@ Screen recording settings.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `savePath` | `""` | Where to save recordings. Empty = `~/Videos` |
+| `savePath` | `""` | Where to save recordings. Empty = `~/Videos/hypr-lens` |
 
 **Example:** `"/home/user/Videos/Recordings"`
 
@@ -136,4 +141,4 @@ Circle selection tool settings.
 
 - Empty string `""` for path settings = use default behavior
 - Restart quickshell after changes: `killall quickshell; quickshell &`
-- Use absolute paths (e.g., `/home/user/...` not `~/...`)
+- Both absolute paths (`/home/user/...`) and tilde paths (`~/...`) are supported

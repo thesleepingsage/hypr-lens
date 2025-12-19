@@ -109,7 +109,7 @@ cd hypr-lens
 | QML modules | `~/.config/quickshell/hypr-lens/` |
 | Scripts | `~/.local/share/hypr-lens/scripts/` |
 | Python venv | `~/.local/share/hypr-lens/venv/` (optional) |
-| Default config | `~/.config/hypr-lens/config.jsonc` |
+| Default config | `~/.config/hypr-lens/config.json` |
 
 ## Updating
 
@@ -229,7 +229,7 @@ See [MANUAL.md](MANUAL.md#ipc-commands) for detailed IPC documentation.
 
 ## Configuration
 
-Config file: `~/.config/hypr-lens/config.jsonc`
+Config file: `~/.config/hypr-lens/config.json`
 
 <details>
 <summary><strong>Full Configuration Reference</strong></summary>

@@ -187,9 +187,9 @@ PanelWindow {
     // Each builder takes (rx, ry, rw, rh, absX, absY) and returns a command array.
     readonly property var commandBuilders: ({
         [RegionSelection.SnipAction.Copy]: (rx, ry, rw, rh, absX, absY) =>
-            SnipCommands.buildCopyCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir),
+            SnipCommands.buildCopyCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir, Config.options.screenSnip.copyAlsoSaves),
         [RegionSelection.SnipAction.Edit]: (rx, ry, rw, rh, absX, absY) =>
-            SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh),
+            SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir),
         [RegionSelection.SnipAction.Search]: (rx, ry, rw, rh, absX, absY) =>
             SnipCommands.buildSearchCommand(root.screenshotPath, rx, ry, rw, rh, "https://lens.google.com"),
         [RegionSelection.SnipAction.CharRecognition]: (rx, ry, rw, rh, absX, absY) =>

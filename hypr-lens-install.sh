@@ -26,7 +26,7 @@ Components installed:
   1. QML modules     → ~/.config/quickshell/hypr-lens/
   2. Scripts         → ~/.local/share/hypr-lens/scripts/
   3. Python venv     → ~/.local/share/hypr-lens/venv/
-  4. Default config  → ~/.config/hypr-lens/config.jsonc
+  4. Default config  → ~/.config/hypr-lens/config.json
 
 Generated (you copy manually):
   - keybinds.example.conf  → Copy contents to your Hyprland keybinds config
@@ -402,7 +402,7 @@ install_config() {
 
     if dry_run_preview \
         "Would create: $CONFIG_DIR" \
-        "Would copy: $SCRIPT_DIR/defaults/config.jsonc → $CONFIG_DIR/config.jsonc" \
+        "Would copy: $SCRIPT_DIR/defaults/config.json → $CONFIG_DIR/config.json" \
         "Would copy: $SCRIPT_DIR/defaults/CONFIG_README.md → $CONFIG_DIR/CONFIG_README.md"; then
         return
     fi
@@ -412,16 +412,28 @@ install_config() {
     # Always copy/update the README
     cp "$SCRIPT_DIR/defaults/CONFIG_README.md" "$CONFIG_DIR/CONFIG_README.md"
 
-    if [[ -f "$CONFIG_DIR/config.jsonc" ]]; then
-        warn "Config already exists at $CONFIG_DIR/config.jsonc"
+    # Migrate old config.jsonc to config.json if needed
+    if [[ -f "$CONFIG_DIR/config.jsonc" && ! -f "$CONFIG_DIR/config.json" ]]; then
+        warn "Found old config.jsonc - migrating to config.json"
+        # Strip comments and trailing commas for valid JSON
+        if sed 's|//.*||g; s/,\s*}/}/g; s/,\s*]/]/g' "$CONFIG_DIR/config.jsonc" | jq . > "$CONFIG_DIR/config.json" 2>/dev/null; then
+            success "Config migrated to config.json"
+            info "Old config.jsonc preserved as backup"
+        else
+            warn "Migration failed - installing default config"
+            cp "$SCRIPT_DIR/defaults/config.json" "$CONFIG_DIR/config.json"
+            success "Default config installed"
+        fi
+    elif [[ -f "$CONFIG_DIR/config.json" ]]; then
+        warn "Config already exists at $CONFIG_DIR/config.json"
         if ask "Overwrite with defaults?"; then
-            cp "$SCRIPT_DIR/defaults/config.jsonc" "$CONFIG_DIR/config.jsonc"
+            cp "$SCRIPT_DIR/defaults/config.json" "$CONFIG_DIR/config.json"
             success "Config overwritten"
         else
             success "Keeping existing config"
         fi
     else
-        cp "$SCRIPT_DIR/defaults/config.jsonc" "$CONFIG_DIR/config.jsonc"
+        cp "$SCRIPT_DIR/defaults/config.json" "$CONFIG_DIR/config.json"
         success "Default config installed"
     fi
     success "Config README installed"
@@ -802,8 +814,8 @@ discover_matugen() {
 
     if [[ -n "$selected_path" ]]; then
         if [[ -f "$selected_path" ]]; then
-            # Update config.jsonc with selected path
-            if [[ -f "$CONFIG_DIR/config.jsonc" ]]; then
+            # Update config.json with selected path
+            if [[ -f "$CONFIG_DIR/config.json" ]]; then
                 if dry_run_preview "Would set matugen path in config to: $selected_path"; then
                     return
                 fi
@@ -811,8 +823,8 @@ discover_matugen() {
                 # (jq doesn't support JSONC, so we use sed to strip // comments first)
                 local tmp_config
                 tmp_config=$(mktemp)
-                if sed 's|//.*||g' "$CONFIG_DIR/config.jsonc" | jq --arg path "$selected_path" '.appearance.matugenPath = $path' > "$tmp_config" 2>/dev/null; then
-                    mv "$tmp_config" "$CONFIG_DIR/config.jsonc"
+                if sed 's|//.*||g' "$CONFIG_DIR/config.json" | jq --arg path "$selected_path" '.appearance.matugenPath = $path' > "$tmp_config" 2>/dev/null; then
+                    mv "$tmp_config" "$CONFIG_DIR/config.json"
                     success "Matugen path set to: $selected_path"
                     warn "Note: Comments were stripped from config. See CONFIG_README.md for reference."
                 else
@@ -964,7 +976,7 @@ update() {
     fi
 
     # Config is preserved (don't overwrite user settings)
-    if [[ -f "$CONFIG_DIR/config.jsonc" ]]; then
+    if [[ -f "$CONFIG_DIR/config.json" ]]; then
         success "Config preserved (not overwritten)"
     else
         install_config

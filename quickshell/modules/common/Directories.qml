@@ -17,7 +17,7 @@ Singleton {
     property string screenshotTemp: "/tmp/hypr-lens/screenshot"
     property string recordScriptPath: scriptPath + "/videos/record.sh"
     property string shellConfig: home + "/.config/hypr-lens"
-    property string shellConfigPath: shellConfig + "/config.jsonc"
+    property string shellConfigPath: shellConfig + "/config.json"
 
     // Create directories on init
     Component.onCompleted: {

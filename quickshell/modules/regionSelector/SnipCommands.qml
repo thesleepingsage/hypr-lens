@@ -9,6 +9,17 @@ import "../common/functions"
 Singleton {
     id: root
 
+    // Expand ~ to actual home directory (bash doesn't expand ~ in single quotes)
+    function expandTilde(path: string): string {
+        if (path.startsWith("~/")) {
+            return Directories.home + path.slice(1);
+        }
+        if (path === "~") {
+            return Directories.home;
+        }
+        return path;
+    }
+
     // Build ImageMagick crop command base
     function buildCropBase(screenshotPath: string, rx: int, ry: int, rw: int, rh: int): string {
         return `magick ${StringUtils.shellSingleQuoteEscape(screenshotPath)} -crop ${rw}x${rh}+${rx}+${ry}`;
@@ -19,32 +30,50 @@ Singleton {
         return `rm '${StringUtils.shellSingleQuoteEscape(screenshotPath)}'`;
     }
 
-    // Copy to clipboard (with optional save to disk)
-    function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string): list<string> {
+    // Default save location when savePath is empty
+    readonly property string defaultSavePath: Directories.home + "/Pictures/hypr-lens"
+
+    // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true)
+    function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
-        if (saveDir === "") {
+        // If not saving, just copy to clipboard
+        if (!alsoSave) {
             return ["bash", "-c", `${cropToStdout} | wl-copy && ${cleanup}`];
         }
 
+        // Save + copy: use provided path or default
+        const targetDir = saveDir !== "" ? saveDir : defaultSavePath;
+        const expandedSaveDir = expandTilde(targetDir);
         return [
             "bash", "-c",
-            `mkdir -p '${StringUtils.shellSingleQuoteEscape(saveDir)}' && \
+            `mkdir -p '${StringUtils.shellSingleQuoteEscape(expandedSaveDir)}' && \
             saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
-            savePath="${saveDir}/$saveFileName" && \
+            savePath="${expandedSaveDir}/$saveFileName" && \
             ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
             ${cleanup}`
         ];
     }
 
-    // Edit with swappy
-    function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int): list<string> {
+    // Edit with swappy (always saves to disk - uses default path if empty)
+    function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
-        return ["bash", "-c", `${cropToStdout} | swappy -f - && ${cleanup}`];
+
+        // Always save: use provided path or default
+        const targetDir = saveDir !== "" ? saveDir : defaultSavePath;
+        const expandedSaveDir = expandTilde(targetDir);
+        return [
+            "bash", "-c",
+            `mkdir -p '${StringUtils.shellSingleQuoteEscape(expandedSaveDir)}' && \
+            saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
+            savePath="${expandedSaveDir}/$saveFileName" && \
+            ${cropToStdout} | swappy -f - -o "$savePath" && \
+            ${cleanup}`
+        ];
     }
 
     // Image search (clipboard-based: copy to clipboard + open search page)

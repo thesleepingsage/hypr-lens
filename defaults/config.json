@@ -1,0 +1,46 @@
+{
+  "appearance": {
+    "matugenPath": "",
+    "ripple": {
+      "usePrimaryColor": true,
+      "colorMixRatio": 0.65,
+      "solidRadius": 0.45,
+      "fadeRadius": 0.7
+    }
+  },
+  "screenSnip": {
+    "savePath": "",
+    "copyAlsoSaves": false
+  },
+  "screenRecord": {
+    "savePath": ""
+  },
+  "ocr": {
+    "useCircleSelection": false
+  },
+  "search": {
+    "imageSearch": {
+      "imageSearchEngineBaseUrl": "https://lens.google.com/uploadbyurl?url=",
+      "useCircleSelection": false
+    }
+  },
+  "monitorOrder": [],
+  "regionSelector": {
+    "targetRegions": {
+      "windows": true,
+      "layers": false,
+      "content": true,
+      "showLabel": false,
+      "opacity": 0.3,
+      "contentRegionOpacity": 0.8,
+      "selectionPadding": 5
+    },
+    "rect": {
+      "showAimLines": true
+    },
+    "circle": {
+      "strokeWidth": 6,
+      "padding": 10
+    }
+  }
+}
