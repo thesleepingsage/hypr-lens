@@ -18,6 +18,7 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 - **Default Save Paths** - Screenshots default to `~/Pictures/hypr-lens`, recordings to `~/Videos/hypr-lens`
 - **Copy Also Saves Option** - New `copyAlsoSaves` config option for users who want left-click to also save
+- **Screenshot Notifications** - Visual feedback via notify-send for copy and save operations
 
 ### Changed
 

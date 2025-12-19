@@ -46,6 +46,11 @@ Singleton {
             savePath="${expandedDir}/$saveFileName"`;
     }
 
+    // Build notification command (follows record.sh pattern)
+    function buildNotify(title: string, body: string): string {
+        return `notify-send '${title}' '${body}' -a 'hypr-lens'`;
+    }
+
     // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true)
     function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
@@ -53,7 +58,9 @@ Singleton {
         const cleanup = buildCleanup(screenshotPath);
 
         if (!alsoSave) {
-            return ["bash", "-c", `${cropToStdout} | wl-copy && ${cleanup}`];
+            return ["bash", "-c", `${cropToStdout} | wl-copy && \
+            ${buildNotify("Copied to clipboard", "")} && \
+            ${cleanup}`];
         }
 
         const expandedSaveDir = resolveSavePath(saveDir);
@@ -61,6 +68,11 @@ Singleton {
             "bash", "-c",
             `${buildSaveSetup(expandedSaveDir)} && \
             ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
+            if [ -f "$savePath" ]; then \
+                ${buildNotify("Saved", "Screenshot saved to $savePath")}; \
+            else \
+                ${buildNotify("Copy failed", "Could not save screenshot")}; \
+            fi && \
             ${cleanup}`
         ];
     }
@@ -75,7 +87,10 @@ Singleton {
         return [
             "bash", "-c",
             `${buildSaveSetup(expandedSaveDir)} && \
-            ${cropToStdout} | swappy -f - -o "$savePath" && \
+            ${cropToStdout} | swappy -f - -o "$savePath"; \
+            if [ -f "$savePath" ]; then \
+                ${buildNotify("Saved", "Screenshot saved to $savePath")}; \
+            fi; \
             ${cleanup}`
         ];
     }
