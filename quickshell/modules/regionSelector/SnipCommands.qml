@@ -33,25 +33,33 @@ Singleton {
     // Default save location when savePath is empty
     readonly property string defaultSavePath: Directories.home + "/Pictures/hypr-lens"
 
+    // Resolve and expand save directory path
+    function resolveSavePath(saveDir: string): string {
+        const targetDir = saveDir !== "" ? saveDir : defaultSavePath;
+        return expandTilde(targetDir);
+    }
+
+    // Build shell commands for save directory setup and filename generation
+    function buildSaveSetup(expandedDir: string): string {
+        return `mkdir -p '${StringUtils.shellSingleQuoteEscape(expandedDir)}' && \
+            saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
+            savePath="${expandedDir}/$saveFileName"`;
+    }
+
     // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true)
     function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
-        // If not saving, just copy to clipboard
         if (!alsoSave) {
             return ["bash", "-c", `${cropToStdout} | wl-copy && ${cleanup}`];
         }
 
-        // Save + copy: use provided path or default
-        const targetDir = saveDir !== "" ? saveDir : defaultSavePath;
-        const expandedSaveDir = expandTilde(targetDir);
+        const expandedSaveDir = resolveSavePath(saveDir);
         return [
             "bash", "-c",
-            `mkdir -p '${StringUtils.shellSingleQuoteEscape(expandedSaveDir)}' && \
-            saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
-            savePath="${expandedSaveDir}/$saveFileName" && \
+            `${buildSaveSetup(expandedSaveDir)} && \
             ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
             ${cleanup}`
         ];
@@ -63,14 +71,10 @@ Singleton {
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
-        // Always save: use provided path or default
-        const targetDir = saveDir !== "" ? saveDir : defaultSavePath;
-        const expandedSaveDir = expandTilde(targetDir);
+        const expandedSaveDir = resolveSavePath(saveDir);
         return [
             "bash", "-c",
-            `mkdir -p '${StringUtils.shellSingleQuoteEscape(expandedSaveDir)}' && \
-            saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
-            savePath="${expandedSaveDir}/$saveFileName" && \
+            `${buildSaveSetup(expandedSaveDir)} && \
             ${cropToStdout} | swappy -f - -o "$savePath" && \
             ${cleanup}`
         ];
