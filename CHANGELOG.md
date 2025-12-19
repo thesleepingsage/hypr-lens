@@ -22,6 +22,7 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 ### Changed
 
 - **Copy Mode Behavior** - Left-click (Copy) now only copies to clipboard by default; use Edit mode (right-click) or enable `copyAlsoSaves` to save files
+- **Code Quality** - Extracted save path helpers to reduce duplication in screenshot commands
 
 ---
 
