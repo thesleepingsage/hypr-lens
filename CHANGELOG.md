@@ -117,4 +117,3 @@ Initial public release! 🎉
 | 1.2.0 | 2025-12-08 | Demo videos, security documentation |
 | 1.1.0 | 2025-12-08 | Monitor capture buttons, installer recovery |
 | 1.0.0 | 2025-12-08 | Initial release |
-[1.0.0]: https://github.com/thesleepingsage/hypr-lens/releases/tag/v1.0.0
