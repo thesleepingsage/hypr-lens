@@ -11,14 +11,14 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 - **Screenshot Save Path** - Screenshots and edited images now properly save to configured `savePath`
 - **Tilde Expansion** - `~/` paths now correctly expand in all save path configurations
-- **Swappy Integration** - Edit mode (swappy) now saves to configured path instead of default Desktop
+- **Swappy Integration** - Edit mode (swappy) now respects `copyAlsoSaves` setting for consistent behavior
 - **Config Parsing** - Changed config format from JSONC to JSON for reliable parsing
 
 ### Added
 
 - **Default Save Paths** - Screenshots default to `~/Pictures/hypr-lens`, recordings to `~/Videos/hypr-lens`
 - **Copy Also Saves Option** - New `copyAlsoSaves` config option for users who want left-click to also save
-- **Screenshot Notifications** - Visual feedback via notify-send for copy and save operations; swappy saves trigger instant notifications via background file watcher
+- **Screenshot Notifications** - Visual feedback via notify-send for copy and save operations
 
 ### Changed
 

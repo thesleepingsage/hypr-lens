@@ -47,8 +47,9 @@ Singleton {
     }
 
     // Build notification command (follows record.sh pattern)
+    // Uses & disown to background notification properly
     function buildNotify(title: string, body: string): string {
-        return `notify-send '${title}' '${body}' -a 'hypr-lens'`;
+        return `notify-send '${title}' "${body}" -a 'hypr-lens' & disown`;
     }
 
     // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true)
@@ -59,7 +60,7 @@ Singleton {
 
         if (!alsoSave) {
             return ["bash", "-c", `${cropToStdout} | wl-copy && \
-            ${buildNotify("hypr-lens", "Copied to clipboard")} && \
+            ${buildNotify("Copied to clipboard", "")} && \
             ${cleanup}`];
         }
 
@@ -69,40 +70,36 @@ Singleton {
             `${buildSaveSetup(expandedSaveDir)} && \
             ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
             if [ -f "$savePath" ]; then \
-                ${buildNotify("hypr-lens", "Saved to $savePath")}; \
+                ${buildNotify("Copied & saved", "$savePath")}; \
             else \
-                ${buildNotify("hypr-lens", "Failed to save screenshot")}; \
+                ${buildNotify("Copy failed", "")}; \
             fi && \
             ${cleanup}`
         ];
     }
 
-    // Edit with swappy (always saves to disk - uses default path if empty)
-    // Uses background file watcher for instant save notifications
-    function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string): list<string> {
+    // Edit with swappy (respects copyAlsoSaves setting)
+    function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
+
+        if (!alsoSave) {
+            return [
+                "bash", "-c",
+                `${cropToStdout} | swappy -f -; \
+                ${buildNotify("Copied to clipboard", "")}; \
+                ${cleanup}`
+            ];
+        }
 
         const expandedSaveDir = resolveSavePath(saveDir);
         return [
             "bash", "-c",
             `${buildSaveSetup(expandedSaveDir)} && \
-            ( \
-                lastMod=""; \
-                while true; do \
-                    if [ -f "$savePath" ]; then \
-                        currentMod=$(stat -c %Y "$savePath" 2>/dev/null); \
-                        if [ "$currentMod" != "$lastMod" ]; then \
-                            ${buildNotify("hypr-lens", "Saved to $savePath")}; \
-                            lastMod="$currentMod"; \
-                        fi; \
-                    fi; \
-                    sleep 0.3; \
-                done \
-            ) & watcherPid=$! && \
-            ${cropToStdout} | swappy -f - -o "$savePath"; \
-            kill $watcherPid 2>/dev/null; \
+            ${cropToStdout} | swappy -f -; \
+            wl-paste > "$savePath" && \
+            ${buildNotify("Copied & saved", "$savePath")}; \
             ${cleanup}`
         ];
     }
