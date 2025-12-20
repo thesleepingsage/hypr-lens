@@ -5,6 +5,24 @@ All notable changes to hypr-lens are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## 1.5.0 - 2025-12-20
+
+### Added
+
+- **Developer Setup Script** - New `dev-setup.sh` creates symlinks for live editing during development
+- **Development Wiki Page** - Contributor guide with setup instructions and project structure
+
+### Changed
+
+- **Installer Cleanup** - Removed dev-specific symlink detection; installer now always copies files (cleaner code path for users)
+
+### Documentation
+
+- **README** - Added Development link to navigation bar
+- **Wiki Sidebar** - Added Contributing section with Development page link
+
+---
+
 ## 1.4.0 - 2025-12-19
 
 ### Fixed
@@ -112,6 +130,7 @@ Initial public release! 🎉
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.5.0 | 2025-12-20 | Developer setup script, contributor docs |
 | 1.4.0 | 2025-12-19 | Screenshot save fix, tilde expansion, swappy integration |
 | 1.3.0 | 2025-12-16 | Right-click edit on monitor buttons |
 | 1.2.0 | 2025-12-08 | Demo videos, security documentation |
