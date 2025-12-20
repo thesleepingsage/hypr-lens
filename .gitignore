@@ -30,6 +30,9 @@ qmlcache/
 # Claude Code / AI assistant
 .claude/
 
+# Wiki (cloned separately for local editing)
+wiki/
+
 # IDE / Editor
 .vscode/
 .idea/
