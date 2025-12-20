@@ -4,9 +4,11 @@
 
 <h1 align="center">hypr-lens</h1>
 
-![Hyprland](https://img.shields.io/badge/Hyprland-58E1FF?style=flat-square&logo=hyprland&logoColor=black)
-![Quickshell](https://img.shields.io/badge/Quickshell-QML-blue?style=flat-square)
-![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=flat-square)
+<p align="center">
+  <img src="https://img.shields.io/badge/Hyprland-58E1FF?style=flat-square&logo=hyprland&logoColor=black" alt="Hyprland">
+  <img src="https://img.shields.io/badge/Quickshell-QML-blue?style=flat-square" alt="Quickshell">
+  <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat-square" alt="License">
+</p>
 
 <p align="center">
   <strong>Screen capture, OCR, and visual search utilities for Hyprland</strong>
