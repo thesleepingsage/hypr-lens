@@ -143,12 +143,6 @@ ask_yes() {
     [[ ! "$response" =~ ^[Nn]$ ]]
 }
 
-is_symlink_to_source() {
-    local dest="$1"
-    local source="$2"
-    [[ -L "$dest" && "$(readlink -f "$dest")" == "$(readlink -f "$source")" ]]
-}
-
 banner() {
     echo -e "${CYAN}"
     cat << 'EOF'
@@ -349,11 +343,6 @@ install_qml_modules() {
         return
     fi
 
-    if is_symlink_to_source "$QML_INSTALL_DIR" "$SCRIPT_DIR/quickshell"; then
-        success "QML modules already symlinked to source"
-        return
-    fi
-
     mkdir -p "$QML_INSTALL_DIR"
     cp -r "$SCRIPT_DIR/quickshell/"* "$QML_INSTALL_DIR/"
     success "QML modules installed"
@@ -365,11 +354,6 @@ install_scripts() {
     if dry_run_preview \
         "Would create: $SCRIPTS_INSTALL_DIR" \
         "Would copy: $SCRIPT_DIR/scripts/* → $SCRIPTS_INSTALL_DIR/"; then
-        return
-    fi
-
-    if is_symlink_to_source "$SCRIPTS_INSTALL_DIR" "$SCRIPT_DIR/scripts"; then
-        success "Scripts already symlinked to source"
         return
     fi
 
@@ -957,8 +941,6 @@ update() {
     info "Updating QML modules..."
     if dry_run_preview "Would update: $QML_INSTALL_DIR"; then
         :
-    elif is_symlink_to_source "$QML_INSTALL_DIR" "$SCRIPT_DIR/quickshell"; then
-        success "QML modules already symlinked to source"
     else
         mkdir -p "$QML_INSTALL_DIR"
         cp -r "$SCRIPT_DIR/quickshell/"* "$QML_INSTALL_DIR/"
@@ -969,8 +951,6 @@ update() {
     info "Updating scripts..."
     if dry_run_preview "Would update: $SCRIPTS_INSTALL_DIR"; then
         :
-    elif is_symlink_to_source "$SCRIPTS_INSTALL_DIR" "$SCRIPT_DIR/scripts"; then
-        success "Scripts already symlinked to source"
     else
         mkdir -p "$SCRIPTS_INSTALL_DIR"
         cp -r "$SCRIPT_DIR/scripts/"* "$SCRIPTS_INSTALL_DIR/"
