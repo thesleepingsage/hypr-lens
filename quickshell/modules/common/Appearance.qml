@@ -1,4 +1,5 @@
 pragma Singleton
+import QtCore
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -11,7 +12,7 @@ Singleton {
     id: root
 
     // Default matugen path (used if config path is empty)
-    readonly property string defaultMatugenPath: StandardPaths.home + "/.config/quickshell/matugen.json"
+    readonly property string defaultMatugenPath: StandardPaths.writableLocation(StandardPaths.HomeLocation).toString().replace("file://", "") + "/.config/quickshell/matugen.json"
 
     // Effective path: config setting takes priority, falls back to default
     readonly property string matugenPath: {
@@ -24,14 +25,15 @@ Singleton {
         id: matugenFile
         path: root.matugenPath
         watchChanges: true
+        onFileChanged: reload()
     }
 
     // Parse matugen colors, null if file missing/invalid
     readonly property var matugenColors: {
-        if (!matugenFile.text) return null
+        const content = matugenFile.text()
+        if (!content) return null
         try {
-            const parsed = JSON.parse(matugenFile.text)
-            return parsed ?? null  // Colors are at root level, not nested
+            return JSON.parse(content) ?? null
         } catch (e) {
             console.warn("[Appearance] Failed to parse matugen.json:", e)
             return null
