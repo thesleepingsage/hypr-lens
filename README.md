@@ -425,6 +425,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Related Projects
+
+- [hypr-overview](https://github.com/thesleepingsage/hypr-overview) - macOS Mission Control-ish-style workspace overview for Hyprland. Inspired by and extracted from end-4's dots-hyprland, with refactoring and additional features.
+
 ## License
 
 This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
