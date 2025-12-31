@@ -60,7 +60,7 @@ Singleton {
 
         if (!alsoSave) {
             return ["bash", "-c", `${cropToStdout} | wl-copy && \
-            ${buildNotify("Copied to clipboard", "")} && \
+            { ${buildNotify("Copied to clipboard", "")}; } && \
             ${cleanup}`];
         }
 
