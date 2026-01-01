@@ -11,7 +11,7 @@ Item {
     clip: true
 
     // Use first child's implicit size instead of childrenRect to avoid animation feedback loop
-    readonly property Item contentItem: contentChildren.length > 0 ? contentChildren[0] : null
+    readonly property Item contentItem: children.length > 0 ? children[0] : null
     implicitWidth: (reveal || vertical) ? (contentItem?.implicitWidth ?? 0) : 0
     implicitHeight: (reveal || !vertical) ? (contentItem?.implicitHeight ?? 0) : 0
     visible: reveal || (width > 0 && height > 0)

@@ -114,9 +114,14 @@ Singleton {
         property int windowRounding: 18
     }
 
+    property QtObject sizes: QtObject {
+        property int elevationMargin: 10
+    }
+
     property QtObject font: QtObject {
         property QtObject family: QtObject {
             property string main: "sans-serif"
+            property string numbers: "sans-serif"
             property string iconMaterial: "Material Symbols Rounded"
         }
         property QtObject pixelSize: QtObject {
@@ -124,6 +129,9 @@ Singleton {
             property int small: 15
             property int normal: 16
             property int larger: 19
+        }
+        property QtObject variableAxes: QtObject {
+            property var main: ({})
         }
     }
 
