@@ -33,7 +33,7 @@ Generated (you copy manually):
 
 Requirements:
   Required: quickshell, grim, slurp, wl-copy, hyprctl, notify-send, jq
-  Optional: tesseract, swappy, wf-recorder, hyprpicker, python3, opencv, matugen
+  Optional: tesseract, satty, swappy, wf-recorder, hyprpicker, python3, opencv, matugen
 EOF
     exit 0
 }
@@ -75,6 +75,8 @@ QML_INSTALL_DIR="$HOME/.config/quickshell/hypr-lens"
 SCRIPTS_INSTALL_DIR="$HOME/.local/share/hypr-lens/scripts"
 VENV_DIR="$HOME/.local/share/hypr-lens/venv"
 CONFIG_DIR="$HOME/.config/hypr-lens"
+WRAPPER_PATH="$HOME/.local/bin/hypr-lens"
+WRAPPER_ALIAS="$HOME/.local/bin/hl"
 
 # ==============================================================================
 # Helper Functions
@@ -194,6 +196,7 @@ declare -A CMD_TO_PKG=(
     ["magick"]="imagemagick"
     # Optional
     ["tesseract"]="tesseract"
+    ["satty"]="satty"
     ["swappy"]="swappy"
     ["wf-recorder"]="wf-recorder"
     ["hyprpicker"]="hyprpicker"
@@ -365,6 +368,54 @@ install_scripts() {
     success "Scripts installed"
 }
 
+install_wrapper_script() {
+    info "Installing wrapper scripts"
+
+    if dry_run_preview \
+        "Would create: $WRAPPER_PATH" \
+        "Would create: $WRAPPER_ALIAS (symlink)"; then
+        return
+    fi
+
+    # Check for existing hypr-lens command
+    if command -v hypr-lens &>/dev/null; then
+        local existing=$(command -v hypr-lens)
+        if [[ "$existing" != "$WRAPPER_PATH" ]]; then
+            warn "hypr-lens command already exists at: $existing"
+            if ! ask "Overwrite with new wrapper?"; then
+                info "Skipping wrapper installation"
+                return 0
+            fi
+        fi
+    fi
+
+    # Create directory if needed
+    mkdir -p "$(dirname "$WRAPPER_PATH")"
+
+    # Create main wrapper script
+    cat > "$WRAPPER_PATH" << 'EOF'
+#!/bin/sh
+# hypr-lens wrapper - auto-detaches for launch, sync for IPC
+
+QS_PATH="$HOME/.config/quickshell/hypr-lens"
+
+# IPC calls need synchronous execution for output
+if [ "$1" = "ipc" ]; then
+    exec qs -p "$QS_PATH" "$@"
+fi
+
+# Launch mode: detach from terminal
+# setsid creates new session, nohup ignores hangup, &>/dev/null silences output
+setsid -f qs -p "$QS_PATH" "$@" &>/dev/null
+EOF
+    chmod +x "$WRAPPER_PATH"
+
+    # Create short alias (symlink to main wrapper)
+    ln -sf "$WRAPPER_PATH" "$WRAPPER_ALIAS"
+
+    success "Wrappers installed: hypr-lens, hl"
+}
+
 setup_python_venv() {
     if ! command -v python3 &>/dev/null; then
         warn "Python3 not found, skipping venv setup"
@@ -403,7 +454,8 @@ install_config() {
     if dry_run_preview \
         "Would create: $CONFIG_DIR" \
         "Would copy: $SCRIPT_DIR/defaults/config.json → $CONFIG_DIR/config.json" \
-        "Would copy: $SCRIPT_DIR/defaults/CONFIG_README.md → $CONFIG_DIR/CONFIG_README.md"; then
+        "Would copy: $SCRIPT_DIR/defaults/CONFIG_README.md → $CONFIG_DIR/CONFIG_README.md" \
+        "Would copy: $SCRIPT_DIR/defaults/satty.toml → $CONFIG_DIR/satty.toml"; then
         return
     fi
 
@@ -437,6 +489,20 @@ install_config() {
         success "Default config installed"
     fi
     success "Config README installed"
+
+    # Bundled satty annotation config (passed to satty via -c; never touches ~/.config/satty)
+    if [[ -f "$CONFIG_DIR/satty.toml" ]]; then
+        warn "satty config already exists at $CONFIG_DIR/satty.toml"
+        if ask "Overwrite with defaults?"; then
+            cp "$SCRIPT_DIR/defaults/satty.toml" "$CONFIG_DIR/satty.toml"
+            success "satty config overwritten"
+        else
+            success "Keeping existing satty config"
+        fi
+    else
+        cp "$SCRIPT_DIR/defaults/satty.toml" "$CONFIG_DIR/satty.toml"
+        success "satty config installed"
+    fi
 }
 
 generate_keybinds_example() {
@@ -600,6 +666,7 @@ uninstall() {
     echo "Components to remove:"
     echo "  - QML modules: $QML_INSTALL_DIR"
     echo "  - Scripts: $SCRIPTS_INSTALL_DIR"
+    echo "  - Wrappers: $WRAPPER_PATH, $WRAPPER_ALIAS"
     echo ""
     echo "Optional (will ask):"
     echo "  - Python venv: $VENV_DIR"
@@ -614,6 +681,10 @@ uninstall() {
     # Required removals
     remove_if_exists "$QML_INSTALL_DIR" "QML modules"
     remove_if_exists "$SCRIPTS_INSTALL_DIR" "scripts"
+
+    # Remove wrapper scripts
+    [[ -f "$WRAPPER_PATH" ]] && rm -f "$WRAPPER_PATH" && success "Removed: $WRAPPER_PATH"
+    [[ -L "$WRAPPER_ALIAS" ]] && rm -f "$WRAPPER_ALIAS" && success "Removed: $WRAPPER_ALIAS"
 
     # Optional removals
     remove_if_exists "$VENV_DIR" "Python venv" --prompt "Remove Python venv ($VENV_DIR)?"
@@ -670,10 +741,11 @@ show_next_steps() {
         echo "   killall quickshell; quickshell &"
     else
         echo -e "1. ${BOLD}Start hypr-lens (for this session):${NC}"
-        echo "   qs --path ~/.config/quickshell/hypr-lens &"
+        echo "   hypr-lens &"
+        echo "   # or use the short alias: hl &"
         echo ""
         echo -e "2. ${BOLD}Add startup to your execs.conf:${NC}"
-        echo "   exec-once = qs --path ~/.config/quickshell/hypr-lens &"
+        echo "   exec-once = hypr-lens"
     fi
 
     # Determine next step number based on what was shown above
@@ -869,7 +941,7 @@ install() {
 
     info "Checking dependencies..."
     check_and_install "required" quickshell grim slurp wl-copy jq notify-send magick
-    check_and_install "optional" tesseract swappy wf-recorder hyprpicker python3 matugen
+    check_and_install "optional" tesseract satty swappy wf-recorder hyprpicker python3 matugen
     success "Required dependencies found"
     echo ""
 
@@ -889,6 +961,7 @@ install() {
     # Install components
     install_qml_modules
     install_scripts
+    install_wrapper_script
     update_directories_paths
     install_config
 
@@ -958,6 +1031,13 @@ update() {
         chmod +x "$SCRIPTS_INSTALL_DIR/images/find-regions-venv.sh"
         chmod +x "$SCRIPTS_INSTALL_DIR/images/find_regions.py"
         success "Scripts updated"
+    fi
+
+    # Install/update wrapper scripts
+    if [[ -f "$WRAPPER_PATH" ]]; then
+        success "Wrapper scripts already installed"
+    else
+        install_wrapper_script
     fi
 
     # Update Directories.qml paths (always needed)

@@ -163,12 +163,14 @@ killall quickshell; quickshell &
 
 Add to your Hyprland startup (e.g., `execs.conf`):
 ```bash
-exec-once = qs --path ~/.config/quickshell/hypr-lens &
+exec-once = hypr-lens
 ```
 
 To start immediately:
 ```bash
-qs --path ~/.config/quickshell/hypr-lens &
+hypr-lens &
+# or use the short alias:
+hl &
 ```
 
 </details>
@@ -230,7 +232,7 @@ qs ipc call region record
 qs ipc call region recordWithSound
 ```
 
-> For standalone mode, use: `qs --path ~/.config/quickshell/hypr-lens ipc call ...`
+> For standalone mode, use: `hypr-lens ipc call ...` (or `hl ipc call ...`)
 
 See [MANUAL.md](MANUAL.md#ipc-commands) for detailed IPC documentation.
 

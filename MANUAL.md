@@ -235,18 +235,20 @@ Control hypr-lens programmatically via quickshell IPC:
 
 ```bash
 # Region screenshot
-qs --path ~/.config/quickshell/hypr-lens ipc call region screenshot
+hypr-lens ipc call region screenshot
 
 # Image search
-qs --path ~/.config/quickshell/hypr-lens ipc call region search
+hypr-lens ipc call region search
 
 # OCR
-qs --path ~/.config/quickshell/hypr-lens ipc call region ocr
+hypr-lens ipc call region ocr
 
 # Recording
-qs --path ~/.config/quickshell/hypr-lens ipc call region record
-qs --path ~/.config/quickshell/hypr-lens ipc call region recordWithSound
+hypr-lens ipc call region record
+hypr-lens ipc call region recordWithSound
 ```
+
+> **Tip:** You can also use the short alias `hl` instead of `hypr-lens`.
 
 **Note:** hypr-lens must be running for IPC commands to work.
 
