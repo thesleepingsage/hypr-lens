@@ -103,6 +103,10 @@ Singleton {
                     property int strokeWidth: 6           // Outline thickness
                     property int padding: 10              // Extra space around selection
                 }
+                // Annotation tool for the "edit" action
+                property JsonObject annotation: JsonObject {
+                    property bool useSatty: true          // true = satty (preferred), false = swappy. Falls back to swappy if satty isn't installed.
+                }
             }
         }
     }

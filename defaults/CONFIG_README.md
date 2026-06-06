@@ -135,6 +135,16 @@ Circle selection tool settings.
 | `strokeWidth` | `6` | Circle outline thickness |
 | `padding` | `10` | Extra space around selection |
 
+### regionSelector.annotation
+
+Annotation tool used by the **Edit** action.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `useSatty` | `true` | `true` = annotate with [satty](https://github.com/gabm/Satty) (preferred); `false` = use swappy. Falls back to swappy automatically if satty isn't installed. |
+
+With satty, **Enter** (or the copy/save toolbar buttons) keeps the edit — copying to the clipboard and, when `screenSnip.copyAlsoSaves` is `true`, saving into the hypr-lens save dir — while **Escape** discards it. satty is configured via the bundled `~/.config/hypr-lens/satty.toml` (edit it to taste; it never touches your own `~/.config/satty`). The swappy fallback is a plain hand-off — swappy uses its own Save/Copy buttons and its own save directory.
+
 ---
 
 ## Tips

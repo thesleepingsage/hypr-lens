@@ -1,0 +1,23 @@
+# hypr-lens bundled satty configuration (annotation tool).
+#
+# Installed to ~/.config/hypr-lens/satty.toml and passed to satty via `satty -c`.
+# This does NOT touch your personal ~/.config/satty/config.toml, and editing it
+# only affects hypr-lens's "edit" action. Targets satty 0.20.x syntax.
+#
+# Save behaviour is controlled per-invocation by hypr-lens via CLI flags
+# (`-o` / `--actions-on-enter`), so `output-filename` is intentionally omitted
+# here (omitting it disables saving unless hypr-lens passes `-o`).
+
+[general]
+# Copy uses the Wayland clipboard.
+copy-command = "wl-copy"
+# Enter copies to the clipboard; hypr-lens adds save-to-file via CLI when copy-also-saves is on.
+actions-on-enter = ["save-to-clipboard"]
+# Escape throws the edit away (no save, no copy).
+actions-on-escape = ["exit"]
+# Close satty as soon as a copy/save action fires.
+early-exit = true
+# Start on the brush tool.
+initial-tool = "brush"
+# Rounded rectangle corners (px).
+corner-roundness = 12
