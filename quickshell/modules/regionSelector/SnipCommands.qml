@@ -78,28 +78,40 @@ Singleton {
         ];
     }
 
-    // Edit with swappy (respects copyAlsoSaves setting)
+    // Edit action: annotate with satty (preferred) or swappy.
+    // satty runs under a bundled config (~/.config/hypr-lens/satty.toml via -c) plus per-mode
+    // flags, so it saves to the hypr-lens dir, copies to the clipboard and discards on Escape -
+    // with NO XDG_CONFIG_HOME override, so GTK theming stays native. satty shows its own
+    // notifications. Falls back to a bare swappy invocation (end-4 style) when satty is disabled
+    // or not installed.
     function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
+        // Annotation tool disabled: bare swappy (end-4 style; swappy owns its own save/copy).
+        if (!Config.options.regionSelector.annotation.useSatty) {
+            return ["bash", "-c", `${cropToStdout} | swappy -f -; ${cleanup}`];
+        }
+
+        const sattyCfg = StringUtils.shellSingleQuoteEscape(Directories.shellConfig + "/satty.toml");
         if (!alsoSave) {
+            const sattyCmd = `satty -c '${sattyCfg}' -f - --copy-command 'wl-copy' --actions-on-escape exit`;
             return [
                 "bash", "-c",
-                `${cropToStdout} | swappy -f -; \
-                ${buildNotify("Copied to clipboard", "")}; \
+                `${cropToStdout} | if command -v satty >/dev/null 2>&1; then ${sattyCmd}; else swappy -f -; fi; \
                 ${cleanup}`
             ];
         }
 
         const expandedSaveDir = resolveSavePath(saveDir);
+        // Save mode: satty writes the annotated image to $savePath on its save action.
+        // The swappy fallback is bare and saves via its own mechanism (ignores $savePath).
+        const sattyCmd = `satty -c '${sattyCfg}' -f - -o "$savePath" --copy-command 'wl-copy' --actions-on-enter save-to-clipboard,save-to-file --actions-on-escape exit`;
         return [
             "bash", "-c",
             `${buildSaveSetup(expandedSaveDir)} && \
-            ${cropToStdout} | swappy -f -; \
-            wl-paste > "$savePath" && \
-            ${buildNotify("Copied & saved", "$savePath")}; \
+            ${cropToStdout} | if command -v satty >/dev/null 2>&1; then ${sattyCmd}; else swappy -f -; fi; \
             ${cleanup}`
         ];
     }

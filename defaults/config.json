@@ -41,6 +41,9 @@
     "circle": {
       "strokeWidth": 6,
       "padding": 10
+    },
+    "annotation": {
+      "useSatty": true
     }
   }
 }
