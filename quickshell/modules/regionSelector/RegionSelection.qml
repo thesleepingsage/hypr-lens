@@ -336,7 +336,7 @@ PanelWindow {
                 borderColor: root.windowBorderColor
                 fillColor: root.windowFillColor
                 regionOpacity: root.targetRegionOpacity
-                radius: Appearance.rounding.windowRounding
+                radius: HyprlandData.decorationRounding
                 labelProperty: "class"
                 draggedAway: dragState.draggedAway
                 targetedRegionX: dragState.targetedRegionX
@@ -352,7 +352,7 @@ PanelWindow {
                 borderColor: root.windowBorderColor
                 fillColor: root.windowFillColor
                 regionOpacity: root.targetRegionOpacity
-                radius: Appearance.rounding.windowRounding
+                radius: HyprlandData.decorationRounding
                 labelProperty: "namespace"
                 draggedAway: dragState.draggedAway
                 targetedRegionX: dragState.targetedRegionX
