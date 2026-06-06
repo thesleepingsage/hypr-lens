@@ -84,29 +84,49 @@ Singleton {
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
-        // swappy -o - prints its final surface to stdout on exit (independent of swappy's
-        // Save button, which is hardwired to swappy's own save_dir). Capture that here so the
-        // result lands in hypr-lens's clipboard/save dir. Mirrors buildCopyCommand.
+        // swappy can't distinguish "keep" from "discard": -o emits its surface on ANY exit
+        // (Escape included). Instead, run swappy under a per-invocation temp XDG_CONFIG_HOME whose
+        // save_dir is a temp file, so the user's Save (Ctrl+S) is the commit gesture and Escape
+        // leaves no file -> silently discarded. gtk-3.0/4.0 are symlinked in to keep matugen
+        // theming; rm -rf removes only those symlinks, never their targets.
+        const home = StringUtils.shellSingleQuoteEscape(Directories.home);
+        const swpSetup = `swpCfg="$(mktemp -d)" && mkdir -p "$swpCfg/swappy" && { \
+            [ -d '${home}/.config/gtk-3.0' ] && ln -s '${home}/.config/gtk-3.0' "$swpCfg/gtk-3.0" 2>/dev/null; \
+            [ -d '${home}/.config/gtk-4.0' ] && ln -s '${home}/.config/gtk-4.0' "$swpCfg/gtk-4.0" 2>/dev/null; \
+            printf '[Default]\\nsave_dir=%s\\nsave_filename_format=edit.png\\nearly_exit=true\\nauto_save=false\\n' "$swpCfg" > "$swpCfg/swappy/config"; }`;
+        const runSwappy = `${cropToStdout} | XDG_CONFIG_HOME="$swpCfg" swappy -f -`;
+        const editFile = `"$swpCfg/edit.png"`;
+        const swpCleanup = `rm -rf "$swpCfg"; ${cleanup}`;
+
+        // Notifications: commit (saved file present) always reports success OR failure;
+        // discard (no file -> Escape, or swappy's own Ctrl+C copy) stays silent.
         if (!alsoSave) {
             return [
                 "bash", "-c",
-                `${cropToStdout} | swappy -f - -o - | wl-copy && \
-                { ${buildNotify("Copied to clipboard", "")}; } && \
-                ${cleanup}`
+                `${swpSetup} && ${runSwappy}; \
+                if [ -s ${editFile} ]; then \
+                    if wl-copy < ${editFile}; then \
+                        ${buildNotify("Copied to clipboard", "")}; \
+                    else \
+                        ${buildNotify("Copy failed", "")}; \
+                    fi; \
+                fi; \
+                ${swpCleanup}`
             ];
         }
 
         const expandedSaveDir = resolveSavePath(saveDir);
         return [
             "bash", "-c",
-            `${buildSaveSetup(expandedSaveDir)} && \
-            ${cropToStdout} | swappy -f - -o - | tee >(wl-copy) > "$savePath" && \
-            if [ -s "$savePath" ]; then \
-                ${buildNotify("Copied & saved", "$savePath")}; \
-            else \
-                rm -f "$savePath"; ${buildNotify("Copy failed", "")}; \
-            fi && \
-            ${cleanup}`
+            `${swpSetup} && ${runSwappy}; \
+            if [ -s ${editFile} ]; then \
+                if ${buildSaveSetup(expandedSaveDir)} && cat ${editFile} | tee >(wl-copy) > "$savePath" && [ -s "$savePath" ]; then \
+                    ${buildNotify("Copied & saved", "$savePath")}; \
+                else \
+                    ${buildNotify("Save failed", "")}; \
+                fi; \
+            fi; \
+            ${swpCleanup}`
         ];
     }
 
