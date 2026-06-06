@@ -1,7 +1,7 @@
 # hypr-lens Configuration
 
 Edit `config.json` in this directory to customize hypr-lens behavior.
-Changes take effect after restarting quickshell: `killall quickshell; quickshell &`
+Changes take effect immediately - the config is watched and hot-reloaded.
 
 ---
 
@@ -150,5 +150,5 @@ With satty, **Enter** (or the copy/save toolbar buttons) keeps the edit — copy
 ## Tips
 
 - Empty string `""` for path settings = use default behavior
-- Restart quickshell after changes: `killall quickshell; quickshell &`
+- Config hot-reloads automatically - no restart needed
 - Both absolute paths (`/home/user/...`) and tilde paths (`~/...`) are supported
