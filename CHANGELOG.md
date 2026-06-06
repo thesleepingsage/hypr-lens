@@ -5,6 +5,25 @@ All notable changes to hypr-lens are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- **satty Annotation Tool** - satty is now the default editor for the "edit" action (configurable via `regionSelector.annotation.useSatty`), with a bundled `satty.toml` and swappy as a fallback
+- **`hypr-lens` / `hl` Wrappers** - Installer now provides launcher commands that detach on launch and run synchronously for IPC; removed on uninstall
+- **Dev Update Helper** - `dev-update.sh` syncs scripts and ensures `shell.qml` integration during development
+
+### Changed
+
+- **Selection Rounding Matches Hyprland** - Selection overlays now read `decoration:rounding` live via `hyprctl getoption` instead of a hardcoded value, so corners match real windows; updates on start and on Hyprland events
+- **Docs Use Wrapper Commands** - README/MANUAL now reference `hypr-lens`/`hl` instead of raw `qs --path ...`
+
+### Fixed
+
+- **Config Docs** - Removed the misleading `killall quickshell; quickshell &` tip; the JSON config hot-reloads and never needs a restart
+
+---
+
 ## 1.5.0 - 2025-12-20
 
 ### Added
