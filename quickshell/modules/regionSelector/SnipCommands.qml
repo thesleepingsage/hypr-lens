@@ -84,11 +84,14 @@ Singleton {
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
+        // swappy -o - prints its final surface to stdout on exit (independent of swappy's
+        // Save button, which is hardwired to swappy's own save_dir). Capture that here so the
+        // result lands in hypr-lens's clipboard/save dir. Mirrors buildCopyCommand.
         if (!alsoSave) {
             return [
                 "bash", "-c",
-                `${cropToStdout} | swappy -f -; \
-                ${buildNotify("Copied to clipboard", "")}; \
+                `${cropToStdout} | swappy -f - -o - | wl-copy && \
+                { ${buildNotify("Copied to clipboard", "")}; } && \
                 ${cleanup}`
             ];
         }
@@ -97,9 +100,12 @@ Singleton {
         return [
             "bash", "-c",
             `${buildSaveSetup(expandedSaveDir)} && \
-            ${cropToStdout} | swappy -f -; \
-            wl-paste > "$savePath" && \
-            ${buildNotify("Copied & saved", "$savePath")}; \
+            ${cropToStdout} | swappy -f - -o - | tee >(wl-copy) > "$savePath" && \
+            if [ -s "$savePath" ]; then \
+                ${buildNotify("Copied & saved", "$savePath")}; \
+            else \
+                rm -f "$savePath"; ${buildNotify("Copy failed", "")}; \
+            fi && \
             ${cleanup}`
         ];
     }
