@@ -111,7 +111,6 @@ Singleton {
         property int small: 12
         property int normal: 17
         property int large: 23
-        property int windowRounding: 18
     }
 
     property QtObject sizes: QtObject {
