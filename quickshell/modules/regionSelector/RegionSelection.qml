@@ -416,14 +416,20 @@ PanelWindow {
             // Controls
             onPressed: (mouse) => {
                 // Every new gesture invalidates any freehand mask staged by a previous
-                // (e.g. Esc-cancelled) selection
+                // (e.g. Esc-cancelled) selection — and any recorded path (startDrag
+                // doesn't clear points; a cancelled grab can leave them populated, and
+                // stale points would now flip the click/draw routing below)
                 root.pendingSnipPoints = [];
+                dragState.points = [];
                 dragState.startDrag(mouse.x, mouse.y, mouse.button);
                 root.updateTargetedRegion(mouse.x, mouse.y);
             }
             onReleased: (mouse) => {
+                // A closed freehand loop can end on its exact start pixel, leaving
+                // draggedAway false — recorded points, not displacement, prove a draw
+                const circleDrawn = root.isCircleSelection && dragState.points.length > 1;
                 // Detect if it was a click -> Try to select targeted region
-                if (!dragState.draggedAway) {
+                if (!dragState.draggedAway && !circleDrawn) {
                     if (dragState.targetedRegionValid()) {
                         const padding = Config.options.regionSelector.targetRegions.selectionPadding;
                         if (root.isCropMode) {
@@ -618,11 +624,16 @@ PanelWindow {
                     selectionMode: root.selectionMode
                     captureMode: root.captureMode
                     onSelectionModeSelected: (mode) => {
+                        // Ignored mid-drag, same as the R/C keys: a mode swap resets
+                        // dragState and orphans the pending release (touch can reach
+                        // the tabs while a mouse drag is live)
+                        if (dragState.dragging) return;
                         // Crop implies rectangles (tab is disabled then too — belt and braces)
                         if (root.isCropMode && mode === RegionSelection.SelectionMode.Circle) return;
                         if (root.selectionMode !== mode) root.selectionMode = mode;
                     }
                     onCaptureModeSelected: (mode) => {
+                        if (dragState.dragging) return;
                         if (root.captureMode !== mode) root.captureMode = mode;
                     }
                     Synchronizer on action {
