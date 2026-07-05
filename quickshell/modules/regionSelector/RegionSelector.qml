@@ -65,8 +65,20 @@ Scope {
 
     // ─── Cross-Monitor Capture Coordination ──────────────────────────────────────
     property string targetMonitorCapture: ""
+    // Initiator state stashed before the pulse so the target instance can adopt the
+    // initiating screen's Crop mode and action instead of replaying with its own.
+    // Only meaningful DURING the targetMonitorCapture pulse — deliberately not cleared
+    // after, so never read these outside a pulse handler (stale previous-relay values).
+    property int crossCaptureMode: RegionSelection.CaptureMode.Instant
+    property var crossCaptureAction: RegionSelection.SnipAction.Copy
 
-    function captureMonitor(monitorName: string) {
+    // Params named relay* to avoid shadowing the selector's own session
+    // captureMode/action properties inside this function
+    function captureMonitor(monitorName: string, relayMode: int, relayAction) {
+        // Stash BEFORE the pulse: the change signal fires synchronously on the target,
+        // which reads these through its bindings
+        root.crossCaptureMode = relayMode;
+        root.crossCaptureAction = relayAction;
         root.targetMonitorCapture = monitorName;
         // Clear immediately (the change signal has already fired synchronously on the
         // target instance): in Crop mode the capture seeds the editor without
@@ -88,8 +100,10 @@ Scope {
                 screen: regionSelectorLoader.modelData
                 allMonitors: root.monitorList
                 targetMonitorCapture: root.targetMonitorCapture
+                crossCaptureMode: root.crossCaptureMode
+                crossCaptureAction: root.crossCaptureAction
                 onDismiss: root.dismiss()
-                onCaptureMonitorRequested: (monitorName) => root.captureMonitor(monitorName)
+                onCaptureMonitorRequested: (monitorName, captureMode, action) => root.captureMonitor(monitorName, captureMode, action)
                 action: root.action
                 selectionMode: root.selectionMode
                 captureMode: root.captureMode
@@ -102,6 +116,10 @@ Scope {
                     function onSessionReset() {
                         selectionWindow.sessionReset();
                         selectionWindow.selectionMode = root.selectionMode;
+                        // action's binding breaks on every cross-monitor relay (the
+                        // target adopts the initiator's action) — re-push it too, or a
+                        // later OCR/Search re-trigger runs the stale action on that screen
+                        selectionWindow.action = root.action;
                     }
                 }
             }

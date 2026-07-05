@@ -76,11 +76,23 @@ PanelWindow {
     // Monitor capture support
     property var allMonitors: []
     property string targetMonitorCapture: ""
-    signal captureMonitorRequested(string monitorName)
+    // Initiator state relayed by RegionSelector with the targetMonitorCapture pulse —
+    // without it the target replays with ITS state (Instant instead of the initiator's
+    // Crop; session-default Copy instead of a right-click's Edit)
+    property int crossCaptureMode: RegionSelection.CaptureMode.Instant
+    property var crossCaptureAction: RegionSelection.SnipAction.Copy
+    signal captureMonitorRequested(string monitorName, int captureMode, var action)
 
     // Watch for cross-monitor capture requests (only when UI is visible and ready)
     onTargetMonitorCaptureChanged: {
         if (!root.visible || targetMonitorCapture === "" || targetMonitorCapture !== root.hyprlandMonitor.name) return;
+        // Adopt the initiator's state before capturing. These local writes break this
+        // instance's action/captureMode bindings — the accepted pattern here; the
+        // selector's onSessionReset handler re-pushes both on the next open. The
+        // captureMode write can fire onCaptureModeChanged side effects (int property,
+        // so an Instant→Instant relay skips them and leaves drag state alone).
+        root.action = root.crossCaptureAction;
+        root.captureMode = root.crossCaptureMode;
         captureFullMonitorLocal();
     }
 
@@ -135,8 +147,9 @@ PanelWindow {
             // This is our monitor, capture locally
             captureFullMonitorLocal();
         } else {
-            // Request parent to coordinate capture on the target monitor
-            root.captureMonitorRequested(monitorName);
+            // Request parent to coordinate capture on the target monitor, carrying
+            // this screen's mode/action (editFullMonitor's Edit write included)
+            root.captureMonitorRequested(monitorName, root.captureMode, root.action);
         }
     }
 
