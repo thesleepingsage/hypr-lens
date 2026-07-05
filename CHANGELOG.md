@@ -18,6 +18,11 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 - **Region Selector Click/Drag Dead-Zone** - Press-to-release movements within `dragThreshold` (default `6` px) are now treated as clicks that select the whole hovered window/region, instead of snipping a tiny drag rectangle. This is a user-visible behavior change: if you relied on tiny deliberate drags to grab very small rectangles, lower or zero the threshold
 - **Region Selector Empty-Space Clicks** - A click (or sub-threshold micro-drag) over empty space with no targetable region now dismisses the overlay cleanly instead of capturing a sliver
+- **Monitor Button Order** - The toolbar's monitor capture buttons now follow left-to-right layout order automatically (ascending x, ties broken top-to-bottom, from Hyprland logical coordinates), re-read every time the selector opens — no configuration needed
+
+### Removed
+
+- **`monitorOrder` Config Key** - The manual monitor button ordering array is gone; ordering is now automatic from the layout position. A leftover key in an existing config is ignored and dropped the next time the config is rewritten
 
 ### Fixed
 

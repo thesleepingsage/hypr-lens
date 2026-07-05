@@ -36,31 +36,52 @@ Scope {
     // ─── Monitor List Management ─────────────────────────────────────────────────
     property var monitorList: []
 
-    FileView {
-        id: monitorOrderFileView
-        path: Directories.shellConfigPath
-        onLoaded: root.rebuildMonitorList()
-    }
-
     Component.onCompleted: rebuildMonitorList()
 
-    // Builds the monitor list from Quickshell.screens and applies custom ordering.
-    // Uses regex to parse monitorOrder from JSONC config (handles comments/trailing commas).
+    // Re-snapshot the monitor list every time the overlay opens: Hyprland's monitor
+    // data may not be populated yet at Component.onCompleted (startup race), and
+    // monitors can be hotplugged or rearranged between opens. The overlay Loaders
+    // below react to the same signal with no guaranteed handler order — safe only
+    // because allMonitors is a live binding, not a one-shot read.
+    Connections {
+        target: GlobalStates
+        function onRegionSelectorOpenChanged() {
+            if (GlobalStates.regionSelectorOpen) root.rebuildMonitorList();
+        }
+    }
+
+    // Hotplug while the overlay is open: the Variants below tracks Quickshell.screens
+    // live, so the button row must follow too or it desyncs from the overlay windows
+    Connections {
+        target: Quickshell
+        function onScreensChanged() {
+            if (GlobalStates.regionSelectorOpen) root.rebuildMonitorList();
+        }
+    }
+
+    // Builds the monitor list from Quickshell.screens, sorted by layout position
+    // (Hyprland logical coordinates): left-to-right, ties top-to-bottom.
     function rebuildMonitorList() {
-        // Parse custom order from config
-        const rawText = monitorOrderFileView.text();
-        const customOrder = RegionUtils.parseMonitorOrder(rawText);
+        // Ask Hyprland to re-fetch monitor state; some rearrangements emit no event.
+        // Async — this rebuild reads current values, the refresh benefits the next one
+        Hyprland.refreshMonitors();
 
         // Build monitor info list
         let list = [];
         for (let i = 0; i < Quickshell.screens.length; i++) {
             const screen = Quickshell.screens[i];
             const monitor = Hyprland.monitorFor(screen);
-            list.push(RegionUtils.buildMonitorInfo(screen, monitor));
+            // monitorFor creates its object eagerly; x/y stay 0 until IPC data
+            // arrives, so treat unpopulated the same as missing. Only warn when the
+            // overlay is open — the startup rebuild is replaced at first open anyway
+            const populated = monitor && monitor.lastIpcObject;
+            if (!populated && GlobalStates.regionSelectorOpen)
+                console.warn("RegionSelector: Hyprland monitor data unavailable for " + screen.name + "; using ShellScreen position");
+            list.push(RegionUtils.buildMonitorInfo(screen, populated ? monitor : null));
         }
 
-        // Apply custom ordering
-        root.monitorList = RegionUtils.sortMonitorsByOrder(list, customOrder);
+        // Sort by layout position
+        root.monitorList = RegionUtils.sortMonitorsByPosition(list);
     }
 
     // ─── Cross-Monitor Capture Coordination ──────────────────────────────────────
@@ -130,6 +151,9 @@ Scope {
     // Opens the region selector with the specified action.
     // Selection mode is determined by config or defaults to RectCorners.
     function openWithAction(action) {
+        // Re-triggering while already open emits no regionSelectorOpenChanged, so
+        // rebuild explicitly to pick up mid-session monitor rearrangement
+        root.rebuildMonitorList();
         root.action = action;
         root.selectionMode = getSelectionModeForAction(action);
         root.captureMode = RegionSelection.CaptureMode.Instant;  // Never persists across opens

@@ -24,7 +24,6 @@
       "useCircleSelection": false
     }
   },
-  "monitorOrder": [],
   "regionSelector": {
     "dragThreshold": 6,
     "targetRegions": {
