@@ -18,10 +18,18 @@ import Quickshell.Hyprland
 Toolbar {
     id: root
 
-    // Use a synchronizer on these
+    // action uses a Synchronizer (display-only here, never written back).
+    // selectionMode/captureMode are plain read-only bindings from RegionSelection — the
+    // single owner. Tab clicks *request* a change via the *Selected signals instead of
+    // writing state, and the tab indices are derived display. (The previous bidirectional
+    // Synchronizer + currentIndex write-back + the C-key external writer left three copies
+    // of the mode that desynced under re-entrant sync.)
     property var action
     property var selectionMode
-    property var captureMode
+    property int captureMode
+
+    signal selectionModeSelected(var mode)
+    signal captureModeSelected(int mode)
     // True while the adjustable crop editor is open (plain binding from RegionSelection)
     property bool cropEditing: false
     // Monitor list for full-screen capture buttons
@@ -36,10 +44,12 @@ Toolbar {
     readonly property bool showMonitorButtons: actionConfig.allowsMonitorButtons
     readonly property bool cropActive: root.captureMode === RegionSelection.CaptureMode.Crop
 
-    // Keep tab indices in sync with externally driven state (C-key toggle swaps
-    // captureMode; entering Crop forces selectionMode back to RectCorners)
+    // Follow the owner: whenever the bound-in mode changes (C key, forced RectCorners,
+    // sessionReset, or an accepted tab request), reflect it in the tab index. Reads the
+    // just-changed property directly — never a derived property that may not have
+    // re-evaluated yet.
     onCaptureModeChanged: {
-        const idx = root.cropActive ? 1 : 0;
+        const idx = root.captureMode === RegionSelection.CaptureMode.Crop ? 1 : 0;
         if (captureModeTabBar.currentIndex !== idx) captureModeTabBar.setCurrentIndex(idx);
     }
     onSelectionModeChanged: {
@@ -65,20 +75,25 @@ Toolbar {
         }
     }
 
-    // Selection mode tabs (Rect/Circle) - inert while Crop is active (Crop implies rectangles)
+    // Selection mode tabs (Rect/Circle) - usable in Crop too (a circle loop seeds the
+    // editor via its bounding box); inert only while the crop editor is open, same as
+    // the capture tabs
     ToolbarTabBar {
         id: tabBar
-        enabled: !root.cropActive
+        enabled: !root.cropEditing
         opacity: enabled ? 1 : 0.4
         tabButtonList: [
             {"icon": "activity_zone", "name": Translation.tr("Rect")},
-            {"icon": "gesture", "name": Translation.tr("Circle")}
+            {"icon": "gesture", "name": Translation.tr("Freehand")}
         ]
         Component.onCompleted: {
             currentIndex = root.selectionMode === RegionSelection.SelectionMode.RectCorners ? 0 : 1
         }
         onCurrentIndexChanged: {
-            root.selectionMode = currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
+            // Emit only for genuine user input; index changes that merely follow the
+            // bound-in state compute the same mode and stay silent (no echo loop).
+            const mode = currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
+            if (mode !== root.selectionMode) root.selectionModeSelected(mode);
         }
     }
 
@@ -97,7 +112,8 @@ Toolbar {
             currentIndex = root.cropActive ? 1 : 0
         }
         onCurrentIndexChanged: {
-            root.captureMode = currentIndex === 0 ? RegionSelection.CaptureMode.Instant : RegionSelection.CaptureMode.Crop;
+            const mode = currentIndex === 0 ? RegionSelection.CaptureMode.Instant : RegionSelection.CaptureMode.Crop;
+            if (mode !== root.captureMode) root.captureModeSelected(mode);
         }
     }
 

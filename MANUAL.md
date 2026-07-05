@@ -25,12 +25,14 @@ Click and drag to select a rectangular region. Features:
 - **Dimension display** - Shows width x height as you drag
 - **Window snapping** - Detected windows highlight for quick selection
 
-### Circle Selection
+### Freehand Selection
+
+Freehand captures the true drawn shape: the output is cropped to the loop's bounding box and everything outside the loop is transparent. OCR flattens the mask onto white (tesseract dislikes alpha); recording always captures the bounding rectangle (wf-recorder is rectangle-only). In Crop mode the mask survives the editor: confirm captures the drawn loop intersected with the adjusted rect.
 
 Used for image search by default. Draw a freeform circle around content:
 
 - Hold and drag to draw
-- Release to capture the bounded area
+- Release to capture the drawn shape (transparent outside the loop)
 - Useful for irregular shapes or specific content
 
 Toggle between modes in config:
@@ -50,10 +52,10 @@ By default captures happen instantly when you release the mouse. Press `C` (or u
 
 - Releasing a selection (or clicking a detected window / monitor button) opens an adjustable editor instead of capturing
 - Drag the 8 handles to resize, or drag inside the rect to move it
-- `Enter` or the confirm button captures the adjusted region; `Escape` goes back to drawing
+- `Enter` or `Space` (or the confirm button) captures the adjusted region; `Escape` goes back to drawing
 - Works for all actions, including recording; right-click selections still open the editor and route to Edit on confirm
 
-Crop mode is per monitor, always starts off (the overlay opens in Instant mode), and temporarily forces rectangle selection — your previous selection mode is restored when you leave it. Minimum size and handle size are configurable via `regionSelector.crop` in the config.
+Crop mode is per monitor and always starts off (the overlay opens in Instant mode). Freehand selection works in Crop too — the drawn loop's bounding box seeds the editor. Toggle Rect/Freehand with `R`. Minimum size and handle size are configurable via `regionSelector.crop` in the config.
 
 ## Screenshot Actions
 

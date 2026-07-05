@@ -27,7 +27,7 @@ Scope {
 
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
-    property var captureMode: RegionSelection.CaptureMode.Instant
+    property int captureMode: RegionSelection.CaptureMode.Instant
 
     // Emitted by openWithAction so live RegionSelection instances (whose property
     // bindings may have been broken by local writes) reset to session defaults

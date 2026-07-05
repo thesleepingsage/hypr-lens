@@ -145,7 +145,7 @@ Rectangle selection tool settings.
 
 ### regionSelector.circle
 
-Circle selection tool settings.
+Freehand ("circle") selection tool settings — the config key keeps its historical name.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -164,7 +164,7 @@ With satty, **Enter** (or the copy/save toolbar buttons) keeps the edit — copy
 
 ### regionSelector.crop
 
-Crop mode: an adjustable crop editor as an alternative to the default instant capture. Toggle it with the **C** key (hardcoded, per monitor) or the Instant/Crop toolbar tabs. In Crop mode, releasing a selection opens an editor with 8 resize handles and interior move-drag instead of capturing immediately; **Enter** (or the confirm button) captures the adjusted region, **Escape** goes back to drawing. The overlay always opens in Instant mode.
+Crop mode: an adjustable crop editor as an alternative to the default instant capture. Toggle it with the **C** key (hardcoded, per monitor) or the Instant/Crop toolbar tabs. In Crop mode, releasing a selection opens an editor with 8 resize handles and interior move-drag instead of capturing immediately; **Enter** or **Space** (or the confirm button) captures the adjusted region, **Escape** goes back to drawing. The overlay always opens in Instant mode.
 
 | Setting | Default | Description |
 |---------|---------|-------------|

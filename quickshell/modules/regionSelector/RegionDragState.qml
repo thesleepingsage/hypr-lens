@@ -103,18 +103,31 @@ QtObject {
         clearTargetedRegion();
     }
 
-    // Compute bounding box from circle selection points
+    // Compute the padded bounding box of the circle selection points without touching
+    // any state — safe for crop-mode seeding, where region* must stay binding-driven
     // padding: extra space around the bounding box
     // fallbackX, fallbackY: coordinates to use if no points recorded
-    function setRegionFromCirclePoints(padding: real, fallbackX: real, fallbackY: real) {
+    function circleBoundingBox(padding: real, fallbackX: real, fallbackY: real): var {
         const dragPoints = (points.length > 0) ? points : [{ x: fallbackX, y: fallbackY }];
         const maxX = Math.max(...dragPoints.map(p => p.x));
         const minX = Math.min(...dragPoints.map(p => p.x));
         const maxY = Math.max(...dragPoints.map(p => p.y));
         const minY = Math.min(...dragPoints.map(p => p.y));
-        regionX = minX - padding;
-        regionY = minY - padding;
-        regionWidth = maxX - minX + padding * 2;
-        regionHeight = maxY - minY + padding * 2;
+        return {
+            x: minX - padding,
+            y: minY - padding,
+            width: maxX - minX + padding * 2,
+            height: maxY - minY + padding * 2
+        };
+    }
+
+    // Set the selection region to the circle points' bounding box (breaks the region*
+    // bindings — only safe on paths that end in dispatch/dismissal)
+    function setRegionFromCirclePoints(padding: real, fallbackX: real, fallbackY: real) {
+        const box = circleBoundingBox(padding, fallbackX, fallbackY);
+        regionX = box.x;
+        regionY = box.y;
+        regionWidth = box.width;
+        regionHeight = box.height;
     }
 }

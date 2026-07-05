@@ -20,9 +20,20 @@ Singleton {
         return path;
     }
 
-    // Build ImageMagick crop command base
-    function buildCropBase(screenshotPath: string, rx: int, ry: int, rw: int, rh: int): string {
-        return `magick ${StringUtils.shellSingleQuoteEscape(screenshotPath)} -crop ${rw}x${rh}+${rx}+${ry}`;
+    // Build ImageMagick crop command base.
+    // polygon: optional "x,y x,y ..." vertex list in crop-local physical pixels (freehand
+    // true-shape capture) — pixels outside it become transparent via a CopyOpacity mask.
+    // flattenWhite: replace that transparency with white (tesseract dislikes alpha).
+    function buildCropBase(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, polygon: string, flattenWhite: bool): string {
+        let cmd = `magick ${StringUtils.shellSingleQuoteEscape(screenshotPath)} -crop ${rw}x${rh}+${rx}+${ry}`;
+        if (polygon !== "") {
+            // +repage zeroes the virtual canvas offset so the mask composites aligned
+            cmd += ` +repage \\( -size ${rw}x${rh} xc:black -fill white -draw 'polygon ${polygon}' \\) -alpha off -compose CopyOpacity -composite`;
+            if (flattenWhite) {
+                cmd += ` -background white -alpha remove -alpha off`;
+            }
+        }
+        return cmd;
     }
 
     // Build cleanup command
@@ -53,8 +64,8 @@ Singleton {
     }
 
     // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true)
-    function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
-        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
+    function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool, polygon: string): list<string> {
+        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh, polygon, false);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
@@ -84,8 +95,8 @@ Singleton {
     // with NO XDG_CONFIG_HOME override, so GTK theming stays native. satty shows its own
     // notifications. Falls back to a bare swappy invocation (end-4 style) when satty is disabled
     // or not installed.
-    function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool): list<string> {
-        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
+    function buildEditCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool, polygon: string): list<string> {
+        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh, polygon, false);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
@@ -118,8 +129,8 @@ Singleton {
 
     // Image search (clipboard-based: copy to clipboard + open search page)
     function buildSearchCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int,
-                                 searchPageUrl: string): list<string> {
-        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
+                                 searchPageUrl: string, polygon: string): list<string> {
+        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh, polygon, false);
         const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
         // Copy to clipboard AND open search page - user pastes with Ctrl+V
@@ -127,8 +138,8 @@ Singleton {
     }
 
     // OCR with tesseract
-    function buildOcrCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int): list<string> {
-        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh);
+    function buildOcrCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, polygon: string): list<string> {
+        const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh, polygon, true);
         const cropInPlace = `${cropBase} '${StringUtils.shellSingleQuoteEscape(screenshotPath)}'`;
         const cleanup = buildCleanup(screenshotPath);
         const tesseractLangs = `$(tesseract --list-langs | awk 'NR>1{print $1}' | tr '\\n' '+' | sed 's/\\+$/\\n/')`;

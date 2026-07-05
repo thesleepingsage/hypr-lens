@@ -32,35 +32,35 @@ PanelWindow {
     enum CaptureMode { Instant, Crop }
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
-    property var captureMode: RegionSelection.CaptureMode.Instant
+    // int, not var: int properties skip the changed signal on same-value writes, so
+    // redundant assignments (sessionReset, echo paths) can't retrigger onCaptureModeChanged
+    property int captureMode: RegionSelection.CaptureMode.Instant
     // Crop mode: true while the adjustable crop editor is open (post-release, pre-confirm)
     property bool cropEditing: false
-    // Selection mode in effect before Crop forced RectCorners; restored on exit
-    property var preCropSelectionMode: RegionSelection.SelectionMode.RectCorners
+    // Freehand true-shape capture: the drawn path, staged by the freehand release branch
+    // for the immediately following snip() (which masks pixels outside it). Empty for
+    // every other path — rect drags, target clicks, monitor buttons, crop confirms.
+    property var pendingSnipPoints: []
     signal dismiss()
 
     property bool isCropMode: (root.captureMode === RegionSelection.CaptureMode.Crop)
 
-    // Swapping capture modes resets the editor and any in-progress drag — never the frame.
-    // Crop implies rectangles: force RectCorners while active (toolbar tab bar is disabled
-    // too), remembering the previous mode so leaving Crop restores it (e.g. OCR's circle
-    // config). Lives here so both the C key and the toolbar tabs get the same behavior.
+    // Swapping capture modes resets the editor and any in-progress drag — never the
+    // frame or the selection mode. Circle works in Crop too: the drawn loop's bounding
+    // box seeds the editor. Lives here so both the C key and the toolbar tabs get the
+    // same behavior.
     onCaptureModeChanged: {
         root.cropEditing = false;
+        root.pendingSnipPoints = [];
         dragState.reset();
-        if (root.isCropMode) {
-            root.preCropSelectionMode = root.selectionMode;
-            root.selectionMode = RegionSelection.SelectionMode.RectCorners;
-        } else {
-            root.selectionMode = root.preCropSelectionMode;
-        }
     }
 
     // Restore session defaults when a capture shortcut re-triggers while the overlay is
-    // already open. Local writes (C key, toolbar Synchronizer) break the captureMode
-    // binding from RegionSelector, so the reset must be pushed as a call, not a binding.
+    // already open. Local writes (the C key) break the captureMode binding from
+    // RegionSelector, so the reset must be pushed as a call, not a binding.
     function sessionReset() {
         root.cropEditing = false;
+        root.pendingSnipPoints = [];
         dragState.reset();
         root.captureMode = RegionSelection.CaptureMode.Instant;
     }
@@ -107,6 +107,7 @@ PanelWindow {
 
     // Capture the full region of this monitor
     function captureFullMonitorLocal() {
+        root.pendingSnipPoints = [];  // full-monitor capture is never freehand-masked
         if (root.isCropMode) {
             // Crop: seed the editor with the full-monitor rect instead of snipping
             root.openCropEditor(0, 0, root.screen.width, root.screen.height);
@@ -255,17 +256,18 @@ PanelWindow {
     // Table of command builders indexed by SnipAction enum value.
     // Each builder takes (rx, ry, rw, rh, absX, absY) and returns a command array.
     readonly property var commandBuilders: ({
-        [RegionSelection.SnipAction.Copy]: (rx, ry, rw, rh, absX, absY) =>
-            SnipCommands.buildCopyCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir, Config.options.screenSnip.copyAlsoSaves),
-        [RegionSelection.SnipAction.Edit]: (rx, ry, rw, rh, absX, absY) =>
-            SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir, Config.options.screenSnip.copyAlsoSaves),
-        [RegionSelection.SnipAction.Search]: (rx, ry, rw, rh, absX, absY) =>
-            SnipCommands.buildSearchCommand(root.screenshotPath, rx, ry, rw, rh, "https://lens.google.com"),
-        [RegionSelection.SnipAction.CharRecognition]: (rx, ry, rw, rh, absX, absY) =>
-            SnipCommands.buildOcrCommand(root.screenshotPath, rx, ry, rw, rh),
-        [RegionSelection.SnipAction.Record]: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.Copy]: (rx, ry, rw, rh, absX, absY, polygon) =>
+            SnipCommands.buildCopyCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir, Config.options.screenSnip.copyAlsoSaves, polygon),
+        [RegionSelection.SnipAction.Edit]: (rx, ry, rw, rh, absX, absY, polygon) =>
+            SnipCommands.buildEditCommand(root.screenshotPath, rx, ry, rw, rh, root.saveScreenshotDir, Config.options.screenSnip.copyAlsoSaves, polygon),
+        [RegionSelection.SnipAction.Search]: (rx, ry, rw, rh, absX, absY, polygon) =>
+            SnipCommands.buildSearchCommand(root.screenshotPath, rx, ry, rw, rh, "https://lens.google.com", polygon),
+        [RegionSelection.SnipAction.CharRecognition]: (rx, ry, rw, rh, absX, absY, polygon) =>
+            SnipCommands.buildOcrCommand(root.screenshotPath, rx, ry, rw, rh, polygon),
+        // Recording is rectangle-only (wf-recorder captures rects); polygon unused
+        [RegionSelection.SnipAction.Record]: (rx, ry, rw, rh, absX, absY, polygon) =>
             SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, false),
-        [RegionSelection.SnipAction.RecordWithSound]: (rx, ry, rw, rh, absX, absY) =>
+        [RegionSelection.SnipAction.RecordWithSound]: (rx, ry, rw, rh, absX, absY, polygon) =>
             SnipCommands.buildRecordCommand(Directories.recordScriptPath, absX, absY, rw, rh, true)
     })
 
@@ -304,6 +306,23 @@ PanelWindow {
         const absX = rx + Math.round(root.monitorOffsetX * root.monitorScale);
         const absY = ry + Math.round(root.monitorOffsetY * root.monitorScale);
 
+        // Freehand true-shape mask: transform the staged path to crop-local physical
+        // pixels, downsampled to <= 150 vertices (a slow scribble records hundreds of
+        // samples; ImageMagick doesn't need them all). Empty string = plain bbox crop.
+        let polygon = "";
+        if (root.pendingSnipPoints.length >= 3) {
+            const pts = root.pendingSnipPoints;
+            const stride = Math.max(1, Math.ceil(pts.length / 150));
+            const parts = [];
+            for (let i = 0; i < pts.length; i += stride) {
+                const px = Math.round((pts[i].x - clamped.x) * root.monitorScale);
+                const py = Math.round((pts[i].y - clamped.y) * root.monitorScale);
+                parts.push(`${px},${py}`);
+            }
+            polygon = parts.join(" ");
+        }
+        root.pendingSnipPoints = [];
+
         // Build command using table-driven approach
         const builder = commandBuilders[root.action];
         if (!builder) {
@@ -311,7 +330,7 @@ PanelWindow {
             root.dismiss();
             return;
         }
-        snipProc.command = builder(rx, ry, rw, rh, absX, absY);
+        snipProc.command = builder(rx, ry, rw, rh, absX, absY, polygon);
 
         snipProc.startDetached();
         root.dismiss();
@@ -355,7 +374,13 @@ PanelWindow {
                 root.captureMode = root.isCropMode
                     ? RegionSelection.CaptureMode.Instant
                     : RegionSelection.CaptureMode.Crop;
-            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.cropEditing && !event.isAutoRepeat) {
+            } else if (event.key === Qt.Key_R && event.modifiers === Qt.NoModifier && !dragState.dragging && !root.cropEditing) {
+                // Rect/Freehand toggle — same guards as C (no mid-drag swaps), plus
+                // inert while the editor is open, matching the toolbar tab gating
+                root.selectionMode = root.selectionMode === RegionSelection.SelectionMode.RectCorners
+                    ? RegionSelection.SelectionMode.Circle
+                    : RegionSelection.SelectionMode.RectCorners;
+            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) && root.cropEditing && !event.isAutoRepeat) {
                 root.confirmCrop();
             }
         }
@@ -372,6 +397,9 @@ PanelWindow {
 
             // Controls
             onPressed: (mouse) => {
+                // Every new gesture invalidates any freehand mask staged by a previous
+                // (e.g. Esc-cancelled) selection
+                root.pendingSnipPoints = [];
                 dragState.startDrag(mouse.x, mouse.y, mouse.button);
                 root.updateTargetedRegion(mouse.x, mouse.y);
             }
@@ -402,6 +430,22 @@ PanelWindow {
                 // Circle dragging?
                 else if (root.selectionMode === RegionSelection.SelectionMode.Circle) {
                     const padding = Config.options.regionSelector.circle.padding + Config.options.regionSelector.circle.strokeWidth / 2;
+                    // True-shape capture: stage the path for snip()'s polygon mask.
+                    // Degenerate paths (< 3 vertices) fall back to the bounding box.
+                    // Staged in Crop too — the mask is screen-anchored (snip() transforms
+                    // it against the final rect), so confirm captures loop ∩ adjusted rect.
+                    if (dragState.points.length >= 3) {
+                        root.pendingSnipPoints = dragState.points.slice();
+                    }
+                    if (root.isCropMode) {
+                        // Crop: seed the editor from the loop's bounding box WITHOUT
+                        // setRegionFromCirclePoints — that writes region* directly and
+                        // would break the bindings Esc-back-to-draw depends on
+                        const box = dragState.circleBoundingBox(padding, mouseArea.mouseX, mouseArea.mouseY);
+                        dragState.endDrag();
+                        root.openCropEditor(box.x, box.y, box.width, box.height);
+                        return;
+                    }
                     dragState.setRegionFromCirclePoints(padding, mouseArea.mouseX, mouseArea.mouseY);
                 }
                 dragState.endDrag();
@@ -422,7 +466,9 @@ PanelWindow {
             Loader {
                 z: 2
                 anchors.fill: parent
-                active: root.selectionMode === RegionSelection.SelectionMode.RectCorners
+                // Also active while crop-editing regardless of selection mode: the editor
+                // is always rectangular (a circle seed becomes its bounding box)
+                active: root.selectionMode === RegionSelection.SelectionMode.RectCorners || root.cropEditing
                 sourceComponent: RectCornersSelectionDetails {
                     regionX: dragState.regionX
                     regionY: dragState.regionY
@@ -455,7 +501,9 @@ PanelWindow {
             Loader {
                 z: 2
                 anchors.fill: parent
-                active: root.selectionMode === RegionSelection.SelectionMode.Circle
+                // Hidden while crop-editing: the drawn loop has been consumed into the
+                // editor's rect (and dragState.points survive until the next reset)
+                active: root.selectionMode === RegionSelection.SelectionMode.Circle && !root.cropEditing
                 sourceComponent: CircleSelectionDetails {
                     color: root.selectionBorderColor
                     overlayColor: root.overlayColor
@@ -544,14 +592,20 @@ PanelWindow {
                 OptionsToolbar {
                     monitors: root.allMonitors
                     cropEditing: root.cropEditing
+                    // Single source of truth is root.captureMode/selectionMode: state flows
+                    // down through these bindings, tab clicks flow up as *Selected requests.
+                    // (The old bidirectional Synchronizers + index write-backs desynced once
+                    // the C key became an external writer.)
+                    selectionMode: root.selectionMode
+                    captureMode: root.captureMode
+                    onSelectionModeSelected: (mode) => {
+                        if (root.selectionMode !== mode) root.selectionMode = mode;
+                    }
+                    onCaptureModeSelected: (mode) => {
+                        if (root.captureMode !== mode) root.captureMode = mode;
+                    }
                     Synchronizer on action {
                         property alias source: root.action
-                    }
-                    Synchronizer on selectionMode {
-                        property alias source: root.selectionMode
-                    }
-                    Synchronizer on captureMode {
-                        property alias source: root.captureMode
                     }
                     onDismiss: root.dismiss();
                     onCaptureFullMonitor: (monitorName) => root.captureFullMonitor(monitorName)
