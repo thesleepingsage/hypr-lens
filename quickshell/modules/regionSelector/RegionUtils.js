@@ -25,11 +25,13 @@ function parseMonitorOrder(rawConfigText) {
 // Clamp a region to fit within screen bounds.
 // Returns a new object with clamped coordinates; does not modify input.
 function clampRegionToScreen(region, screenWidth, screenHeight) {
-    // First clamp position, then clamp dimensions based on remaining space
-    const clampedX = Math.max(0, Math.min(region.x, screenWidth - 1));
-    const clampedY = Math.max(0, Math.min(region.y, screenHeight - 1));
-    const clampedWidth = Math.max(0, Math.min(region.width, screenWidth - clampedX));
-    const clampedHeight = Math.max(0, Math.min(region.height, screenHeight - clampedY));
+    // Trim, don't slide: dimensions are computed from the region's original right/bottom
+    // edge, so left/top overhang shrinks the region (capturing only its visible extent)
+    // instead of translating it on-screen at full size over unrelated content
+    const clampedX = Math.max(0, Math.min(region.x, screenWidth));
+    const clampedY = Math.max(0, Math.min(region.y, screenHeight));
+    const clampedWidth = Math.max(0, Math.min(region.x + region.width, screenWidth) - clampedX);
+    const clampedHeight = Math.max(0, Math.min(region.y + region.height, screenHeight) - clampedY);
 
     return {
         x: clampedX,

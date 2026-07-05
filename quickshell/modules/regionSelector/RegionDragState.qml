@@ -31,9 +31,14 @@ QtObject {
     property real targetedRegionY: -1
     property real targetedRegionWidth: 0
     property real targetedRegionHeight: 0
+    // Validity is a dedicated flag, not a sign check on the coordinates: origins are
+    // legitimately negative for windows/layers straddling the monitor's left/top edge
+    // (so even (-1,-1) can be a real origin). What keeps the cleared values from ever
+    // matching a real region in the repeaters' equality highlight is the zero size.
+    property bool targetedRegionActive: false
 
     function targetedRegionValid(): bool {
-        return (targetedRegionX >= 0 && targetedRegionY >= 0);
+        return targetedRegionActive;
     }
 
     function setTargetedRegion(region) {
@@ -42,6 +47,7 @@ QtObject {
             targetedRegionY = region.at[1];
             targetedRegionWidth = region.size[0];
             targetedRegionHeight = region.size[1];
+            targetedRegionActive = true;
         } else {
             clearTargetedRegion();
         }
@@ -52,6 +58,7 @@ QtObject {
         targetedRegionY = -1;
         targetedRegionWidth = 0;
         targetedRegionHeight = 0;
+        targetedRegionActive = false;
     }
 
     function setRegionToTargeted(padding: real) {

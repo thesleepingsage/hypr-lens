@@ -19,6 +19,11 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 - **Region Selector Click/Drag Dead-Zone** - Press-to-release movements within `dragThreshold` (default `6` px) are now treated as clicks that select the whole hovered window/region, instead of snipping a tiny drag rectangle. This is a user-visible behavior change: if you relied on tiny deliberate drags to grab very small rectangles, lower or zero the threshold
 - **Region Selector Empty-Space Clicks** - A click (or sub-threshold micro-drag) over empty space with no targetable region now dismisses the overlay cleanly instead of capturing a sliver
 
+### Fixed
+
+- **Edge-Straddling Window Targeting** - Clicking a window or layer that hangs off the monitor's left/top edge now selects it (matching its hover highlight) instead of dismissing the overlay; validity no longer sign-checks the region's origin. The capture is trimmed to the window's visible on-screen extent — screen clamping used to slide such regions fully on-screen at full size, which would have captured unrelated content beside the window
+- **Invisible Region Selection** - Clicks no longer select regions whose highlight type is disabled (`regionSelector.targetRegions.*: false`); hit-testing now follows the same gating as the visuals. Note this also changes Freehand mode: a stationary click on a window (never highlighted there) previously captured that window silently — it now dismisses the overlay unless the click lands inside a highlighted content region, which stays selectable in Freehand, consistent with what's on screen
+
 ---
 
 ## 1.6.0 - 2026-06-06

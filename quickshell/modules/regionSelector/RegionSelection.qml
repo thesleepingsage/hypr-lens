@@ -195,9 +195,11 @@ PanelWindow {
 
     function updateTargetedRegion(x, y) {
         // Priority: content regions > layer regions > window regions
-        const clickedRegion = RegionFunctions.findRegionAtPoint(root.imageRegions, x, y)
-            ?? RegionFunctions.findRegionAtPoint(root.layerRegions, x, y)
-            ?? RegionFunctions.findRegionAtPoint(root.windowRegions, x, y);
+        // Each lookup is gated by the same enable* flag as its repeater, so a click
+        // can never select a region type whose highlights aren't shown
+        const clickedRegion = (root.enableContentRegions ? RegionFunctions.findRegionAtPoint(root.imageRegions, x, y) : null)
+            ?? (root.enableLayerRegions ? RegionFunctions.findRegionAtPoint(root.layerRegions, x, y) : null)
+            ?? (root.enableWindowRegions ? RegionFunctions.findRegionAtPoint(root.windowRegions, x, y) : null);
         dragState.setTargetedRegion(clickedRegion);
     }
 
@@ -294,6 +296,13 @@ PanelWindow {
             width: dragState.regionWidth,
             height: dragState.regionHeight
         }, root.screen.width, root.screen.height);
+        // Re-check after clamping: trimming can zero a region whose on-screen extent
+        // is empty (edge-touching rect) even when the pre-clamp size was positive
+        if (clamped.width <= 0 || clamped.height <= 0) {
+            console.warn("[Region Selector] Region has no on-screen extent, skipping snip.");
+            root.dismiss();
+            return;
+        }
         dragState.regionX = clamped.x;
         dragState.regionY = clamped.y;
         dragState.regionWidth = clamped.width;
