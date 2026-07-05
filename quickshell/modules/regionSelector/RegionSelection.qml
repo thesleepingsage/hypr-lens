@@ -54,7 +54,11 @@ PanelWindow {
         root.cropEditing = false;
         root.pendingSnipPoints = [];
         dragState.reset();
-        if (root.isCropMode && root.selectionMode === RegionSelection.SelectionMode.Circle) {
+        // Read captureMode directly, NOT isCropMode: the derived binding may not have
+        // re-evaluated yet inside this handler (stale read = the swap fires one toggle
+        // late, on exit instead of entry)
+        if (root.captureMode === RegionSelection.CaptureMode.Crop
+                && root.selectionMode === RegionSelection.SelectionMode.Circle) {
             root.selectionMode = RegionSelection.SelectionMode.RectCorners;
         }
     }

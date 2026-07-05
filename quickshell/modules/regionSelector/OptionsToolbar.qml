@@ -76,11 +76,12 @@ Toolbar {
     }
 
     // Selection mode tabs (Rect/Freehand) - inert while Crop is active (Crop implies
-    // rectangles; entering Crop from Freehand auto-swaps to Rect)
+    // rectangles; entering Crop from Freehand auto-swaps to Rect). Dimmed via opacity +
+    // interactive, NOT enabled — see ToolbarTabBar.interactive.
     ToolbarTabBar {
         id: tabBar
-        enabled: !root.cropActive
-        opacity: enabled ? 1 : 0.4
+        interactive: !root.cropActive
+        opacity: interactive ? 1 : 0.4
         tabButtonList: [
             {"icon": "activity_zone", "name": Translation.tr("Rect")},
             {"icon": "gesture", "name": Translation.tr("Freehand")}
@@ -101,8 +102,8 @@ Toolbar {
     // (Esc, C and the FABs are the editor exits)
     ToolbarTabBar {
         id: captureModeTabBar
-        enabled: !root.cropEditing
-        opacity: enabled ? 1 : 0.4
+        interactive: !root.cropEditing
+        opacity: interactive ? 1 : 0.4
         tabButtonList: [
             {"icon": "bolt", "name": Translation.tr("Instant")},
             {"icon": "crop", "name": Translation.tr("Crop")}
