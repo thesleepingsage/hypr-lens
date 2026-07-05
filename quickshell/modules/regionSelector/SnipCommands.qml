@@ -63,28 +63,41 @@ Singleton {
         return `notify-send '${title}' "${body}" -a 'hypr-lens' & disown`;
     }
 
-    // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true)
+    // Copy to clipboard (optionally also saves to disk if copyAlsoSaves is true).
+    // The crop is staged to a file and everything downstream is gated on [ -s ]:
+    // piping magick straight into wl-copy would clear the clipboard (and fire a
+    // false success notification) whenever the crop fails or emits nothing.
+    // Cleanup is ;-chained so the source screenshot never leaks on failure.
     function buildCopyCommand(screenshotPath: string, rx: int, ry: int, rw: int, rh: int, saveDir: string, alsoSave: bool, polygon: string): list<string> {
         const cropBase = buildCropBase(screenshotPath, rx, ry, rw, rh, polygon, false);
-        const cropToStdout = `${cropBase} -`;
         const cleanup = buildCleanup(screenshotPath);
 
         if (!alsoSave) {
-            return ["bash", "-c", `${cropToStdout} | wl-copy && \
-            { ${buildNotify("Copied to clipboard", "")}; } && \
+            const cropTmp = StringUtils.shellSingleQuoteEscape(screenshotPath + ".crop.png");
+            // Pre-clean guards against a stale crop from a killed prior run satisfying
+            // the gate; the gate itself needs magick's exit status AND a non-empty file
+            // ([ -s ] alone would bless a truncated PNG from a disk-full/killed magick)
+            return ["bash", "-c", `rm -f '${cropTmp}'; \
+            if ${cropBase} '${cropTmp}' && [ -s '${cropTmp}' ]; then \
+                if wl-copy < '${cropTmp}'; then ${buildNotify("Copied to clipboard", "")}; else ${buildNotify("Copy failed", "")}; fi; \
+            else \
+                ${buildNotify("Copy failed", "")}; \
+            fi; \
+            rm -f '${cropTmp}'; \
             ${cleanup}`];
         }
 
         const expandedSaveDir = resolveSavePath(saveDir);
+        // Saved-but-copy-failed is a reachable state (dead compositor, wl-copy missing)
+        // and must say so — the file exists and the user needs to know where
         return [
             "bash", "-c",
-            `${buildSaveSetup(expandedSaveDir)} && \
-            ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
-            if [ -f "$savePath" ]; then \
-                ${buildNotify("Copied & saved", "$savePath")}; \
+            `if ${buildSaveSetup(expandedSaveDir)} && ${cropBase} "$savePath" && [ -s "$savePath" ]; then \
+                if wl-copy < "$savePath"; then ${buildNotify("Copied & saved", "$savePath")}; else ${buildNotify("Saved, copy failed", "$savePath")}; fi; \
             else \
+                rm -f "$savePath"; \
                 ${buildNotify("Copy failed", "")}; \
-            fi && \
+            fi; \
             ${cleanup}`
         ];
     }
