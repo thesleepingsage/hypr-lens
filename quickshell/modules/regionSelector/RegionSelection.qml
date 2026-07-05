@@ -29,9 +29,41 @@ PanelWindow {
 
     enum SnipAction { Copy, Edit, Search, CharRecognition, Record, RecordWithSound }
     enum SelectionMode { RectCorners, Circle }
+    enum CaptureMode { Instant, Crop }
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
+    property var captureMode: RegionSelection.CaptureMode.Instant
+    // Crop mode: true while the adjustable crop editor is open (post-release, pre-confirm)
+    property bool cropEditing: false
+    // Selection mode in effect before Crop forced RectCorners; restored on exit
+    property var preCropSelectionMode: RegionSelection.SelectionMode.RectCorners
     signal dismiss()
+
+    property bool isCropMode: (root.captureMode === RegionSelection.CaptureMode.Crop)
+
+    // Swapping capture modes resets the editor and any in-progress drag — never the frame.
+    // Crop implies rectangles: force RectCorners while active (toolbar tab bar is disabled
+    // too), remembering the previous mode so leaving Crop restores it (e.g. OCR's circle
+    // config). Lives here so both the C key and the toolbar tabs get the same behavior.
+    onCaptureModeChanged: {
+        root.cropEditing = false;
+        dragState.reset();
+        if (root.isCropMode) {
+            root.preCropSelectionMode = root.selectionMode;
+            root.selectionMode = RegionSelection.SelectionMode.RectCorners;
+        } else {
+            root.selectionMode = root.preCropSelectionMode;
+        }
+    }
+
+    // Restore session defaults when a capture shortcut re-triggers while the overlay is
+    // already open. Local writes (C key, toolbar Synchronizer) break the captureMode
+    // binding from RegionSelector, so the reset must be pushed as a call, not a binding.
+    function sessionReset() {
+        root.cropEditing = false;
+        dragState.reset();
+        root.captureMode = RegionSelection.CaptureMode.Instant;
+    }
 
     // Monitor capture support
     property var allMonitors: []
@@ -44,8 +76,42 @@ PanelWindow {
         captureFullMonitorLocal();
     }
 
+    // Open the crop editor seeded with the given rect, normalized for editability:
+    // clamped to screen bounds, then grown per axis to >= minSize while staying on
+    // screen. Every editor entry path (drag release, targeted click, full monitor)
+    // goes through here so sub-minSize or offscreen seeds can't produce an editor
+    // with unreachable handles or jumping clamps.
+    // Seeds via dragState.seedRect (endpoint writes) — region* bindings stay intact.
+    function openCropEditor(x, y, w, h) {
+        const minSize = Math.max(1, Config.options.regionSelector.crop.minSize);
+        const clamped = RegionUtils.clampRegionToScreen(
+            { x: x, y: y, width: w, height: h },
+            root.screen.width, root.screen.height
+        );
+        const rw = Math.min(root.screen.width, Math.max(clamped.width, minSize));
+        const rh = Math.min(root.screen.height, Math.max(clamped.height, minSize));
+        const rx = Math.min(clamped.x, root.screen.width - rw);
+        const ry = Math.min(clamped.y, root.screen.height - rh);
+        dragState.seedRect(rx, ry, rw, rh);
+        dragState.endDrag();
+        root.cropEditing = true;
+    }
+
+    // Confirm the crop editor: latch it closed before dispatching so a held Enter
+    // key or a queued FAB click can't fire snip() a second time before teardown
+    function confirmCrop() {
+        if (!root.cropEditing) return;
+        root.cropEditing = false;
+        root.snip();
+    }
+
     // Capture the full region of this monitor
     function captureFullMonitorLocal() {
+        if (root.isCropMode) {
+            // Crop: seed the editor with the full-monitor rect instead of snipping
+            root.openCropEditor(0, 0, root.screen.width, root.screen.height);
+            return;
+        }
         dragState.regionX = 0;
         dragState.regionY = 0;
         dragState.regionWidth = root.screen.width;
@@ -261,14 +327,36 @@ PanelWindow {
     }
 
     ScreencopyView {
+        id: screencopyView
         anchors.fill: parent
         live: false
         captureSource: root.screen
 
         focus: root.visible
-        Keys.onPressed: (event) => { // Esc to close
+        // QQC2 buttons (toolbar tabs, FABs, monitor buttons) grab focus on click and
+        // would silently kill Esc/C/Enter. Nothing else in the overlay takes keyboard
+        // input, so always reclaim it while visible.
+        onActiveFocusChanged: {
+            if (root.visible && !screencopyView.activeFocus) screencopyView.forceActiveFocus();
+        }
+        Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Escape) {
-                root.dismiss();
+                if (root.cropEditing) {
+                    // First Esc: cancel the editor, back to draw (frame retained)
+                    root.cropEditing = false;
+                    dragState.reset();
+                } else {
+                    root.dismiss();
+                }
+            } else if (event.key === Qt.Key_C && event.modifiers === Qt.NoModifier && !dragState.dragging) {
+                // Hardcoded toggle, per-screen scope (same as the Rect/Circle toolbar
+                // toggle). Ignored mid-drag: the mode swap resets dragState, and the
+                // orphaned release would then dismiss the overlay as an empty click.
+                root.captureMode = root.isCropMode
+                    ? RegionSelection.CaptureMode.Instant
+                    : RegionSelection.CaptureMode.Crop;
+            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.cropEditing && !event.isAutoRepeat) {
+                root.confirmCrop();
             }
         }
 
@@ -278,6 +366,9 @@ PanelWindow {
             cursorShape: Qt.CrossCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             hoverEnabled: true
+            // While the crop editor is open, CropHandles owns the mouse
+            // (MouseArea.enabled only mutes this area, not its children)
+            enabled: !root.cropEditing
 
             // Controls
             onPressed: (mouse) => {
@@ -289,7 +380,19 @@ PanelWindow {
                 if (!dragState.draggedAway) {
                     if (dragState.targetedRegionValid()) {
                         const padding = Config.options.regionSelector.targetRegions.selectionPadding;
-                        dragState.setRegionToTargeted(padding);
+                        if (root.isCropMode) {
+                            // Crop: open the editor seeded with the padded target
+                            // (openCropEditor normalizes edge-of-screen overhang)
+                            root.openCropEditor(
+                                dragState.targetedRegionX - padding,
+                                dragState.targetedRegionY - padding,
+                                dragState.targetedRegionWidth + padding * 2,
+                                dragState.targetedRegionHeight + padding * 2
+                            );
+                            return;
+                        } else {
+                            dragState.setRegionToTargeted(padding);
+                        }
                     } else {
                         dragState.endDrag();
                         root.dismiss();
@@ -302,6 +405,13 @@ PanelWindow {
                     dragState.setRegionFromCirclePoints(padding, mouseArea.mouseX, mouseArea.mouseY);
                 }
                 dragState.endDrag();
+                if (root.isCropMode) {
+                    // Crop: open the adjustable editor instead of dispatching
+                    // (openCropEditor normalizes sub-minSize/one-axis drags)
+                    root.openCropEditor(dragState.regionX, dragState.regionY,
+                                        dragState.regionWidth, dragState.regionHeight);
+                    return;
+                }
                 root.snip();
             }
             onPositionChanged: (mouse) => {
@@ -322,6 +432,23 @@ PanelWindow {
                     mouseY: mouseArea.mouseY
                     color: root.selectionBorderColor
                     overlayColor: root.overlayColor
+                    // mouseArea is muted while crop-editing, so hide the (frozen) crosshair
+                    showAimLines: Config.options.regionSelector.rect.showAimLines && !root.cropEditing
+                }
+            }
+
+            // Crop editor: resize handles + interior move-grab, rendered above the
+            // selection details (border/label stay live via the region* bindings)
+            Loader {
+                z: 5
+                anchors.fill: parent
+                active: root.cropEditing
+                sourceComponent: CropHandles {
+                    dragState: dragState
+                    screenWidth: root.screen.width
+                    screenHeight: root.screen.height
+                    handleColor: root.selectionBorderColor
+                    handleBorderColor: root.onBorderColor
                 }
             }
 
@@ -416,15 +543,40 @@ PanelWindow {
 
                 OptionsToolbar {
                     monitors: root.allMonitors
+                    cropEditing: root.cropEditing
                     Synchronizer on action {
                         property alias source: root.action
                     }
                     Synchronizer on selectionMode {
                         property alias source: root.selectionMode
                     }
+                    Synchronizer on captureMode {
+                        property alias source: root.captureMode
+                    }
                     onDismiss: root.dismiss();
                     onCaptureFullMonitor: (monitorName) => root.captureFullMonitor(monitorName)
                     onEditFullMonitor: (monitorName) => root.editFullMonitor(monitorName)
+                }
+                Item {
+                    visible: root.cropEditing
+                    anchors {
+                        verticalCenter: parent.verticalCenter
+                    }
+                    implicitWidth: confirmFab.implicitWidth
+                    implicitHeight: confirmFab.implicitHeight
+                    StyledRectangularShadow {
+                        target: confirmFab
+                        radius: confirmFab.buttonRadius
+                    }
+                    FloatingActionButton {
+                        id: confirmFab
+                        baseSize: 48
+                        iconText: "check"
+                        onClicked: root.confirmCrop();
+                        StyledToolTip {
+                            text: Translation.tr("Confirm")
+                        }
+                    }
                 }
                 Item {
                     anchors {

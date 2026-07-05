@@ -61,6 +61,17 @@ QtObject {
         regionHeight = targetedRegionHeight + padding * 2;
     }
 
+    // Seed the selection region by writing drag endpoints (Crop mode).
+    // The only sanctioned way Crop paths set geometry: region* are bindings
+    // over dragStart*/dragging*, and assigning them directly would break the
+    // bindings for the rest of the overlay session (Esc-back-to-draw).
+    function seedRect(x: real, y: real, w: real, h: real) {
+        dragStartX = x;
+        dragStartY = y;
+        draggingX = x + w;
+        draggingY = y + h;
+    }
+
     function startDrag(x: real, y: real, button) {
         dragStartX = x;
         dragStartY = y;

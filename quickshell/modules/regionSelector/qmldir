@@ -9,4 +9,5 @@ MonitorButton 1.0 MonitorButton.qml
 OptionsToolbar 1.0 OptionsToolbar.qml
 TargetRegion 1.0 TargetRegion.qml
 CircleSelectionDetails 1.0 CircleSelectionDetails.qml
+CropHandles 1.0 CropHandles.qml
 RectCornersSelectionDetails 1.0 RectCornersSelectionDetails.qml

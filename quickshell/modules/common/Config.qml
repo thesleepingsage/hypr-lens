@@ -108,6 +108,11 @@ Singleton {
                 property JsonObject annotation: JsonObject {
                     property bool useSatty: true          // true = satty (preferred), false = swappy. Falls back to swappy if satty isn't installed.
                 }
+                // Crop mode adjustable editor (toggled with the C key)
+                property JsonObject crop: JsonObject {
+                    property int minSize: 20              // Minimum crop width/height in px
+                    property int handleSize: 12           // Visual size of resize handles in px
+                }
             }
         }
     }

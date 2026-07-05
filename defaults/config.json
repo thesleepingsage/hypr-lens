@@ -45,6 +45,10 @@
     },
     "annotation": {
       "useSatty": true
+    },
+    "crop": {
+      "minSize": 20,
+      "handleSize": 12
     }
   }
 }

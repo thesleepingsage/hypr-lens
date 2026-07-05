@@ -9,6 +9,7 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 ### Added
 
+- **Crop Mode** - Press `C` (or the new Instant/Crop toolbar tabs) to switch the region selector into Crop mode: releasing a selection opens an adjustable editor (8 resize handles + interior move, min-size and screen clamping, live size label) instead of capturing immediately; **Enter** or the confirm button captures, **Escape** returns to drawing. Works for screenshots and recording alike; configurable via `regionSelector.crop.minSize`/`handleSize`
 - **`regionSelector.dragThreshold` Config Key** - Pixel dead-zone (default `6`) for the region selector's click/drag discriminator; `0` disables it, restoring the previous per-pixel sensitivity (circle mode always uses `0` — every circle gesture is the drawn shape)
 
 ### Changed

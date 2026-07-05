@@ -44,6 +44,17 @@ Toggle between modes in config:
 }
 ```
 
+### Crop Mode
+
+By default captures happen instantly when you release the mouse. Press `C` (or use the Instant/Crop toolbar tabs) to switch the current monitor's overlay into Crop mode:
+
+- Releasing a selection (or clicking a detected window / monitor button) opens an adjustable editor instead of capturing
+- Drag the 8 handles to resize, or drag inside the rect to move it
+- `Enter` or the confirm button captures the adjusted region; `Escape` goes back to drawing
+- Works for all actions, including recording; right-click selections still open the editor and route to Edit on confirm
+
+Crop mode is per monitor, always starts off (the overlay opens in Instant mode), and temporarily forces rectangle selection — your previous selection mode is restored when you leave it. Minimum size and handle size are configurable via `regionSelector.crop` in the config.
+
 ## Screenshot Actions
 
 ### Copy (Super+Shift+S)
@@ -224,6 +235,10 @@ Full config schema (`~/.config/hypr-lens/config.json`):
     "circle": {
       "strokeWidth": 6,      // Circle selection line thickness
       "padding": 10          // Extra padding around circle bounds
+    },
+    "crop": {
+      "minSize": 20,         // Minimum crop width/height in px
+      "handleSize": 12       // Visual size of resize handles in px
     }
   }
 }

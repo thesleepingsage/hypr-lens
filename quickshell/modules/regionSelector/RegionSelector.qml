@@ -27,6 +27,11 @@ Scope {
 
     property var action: RegionSelection.SnipAction.Copy
     property var selectionMode: RegionSelection.SelectionMode.RectCorners
+    property var captureMode: RegionSelection.CaptureMode.Instant
+
+    // Emitted by openWithAction so live RegionSelection instances (whose property
+    // bindings may have been broken by local writes) reset to session defaults
+    signal sessionReset()
 
     // ─── Monitor List Management ─────────────────────────────────────────────────
     property var monitorList: []
@@ -63,6 +68,11 @@ Scope {
 
     function captureMonitor(monitorName: string) {
         root.targetMonitorCapture = monitorName;
+        // Clear immediately (the change signal has already fired synchronously on the
+        // target instance): in Crop mode the capture seeds the editor without
+        // dismissing, and a stale value would make re-clicking the same monitor
+        // button a silent no-op
+        root.targetMonitorCapture = "";
     }
 
     // ─── Region Selection Windows ────────────────────────────────────────────────
@@ -74,6 +84,7 @@ Scope {
             active: GlobalStates.regionSelectorOpen
 
             sourceComponent: RegionSelection {
+                id: selectionWindow
                 screen: regionSelectorLoader.modelData
                 allMonitors: root.monitorList
                 targetMonitorCapture: root.targetMonitorCapture
@@ -81,6 +92,18 @@ Scope {
                 onCaptureMonitorRequested: (monitorName) => root.captureMonitor(monitorName)
                 action: root.action
                 selectionMode: root.selectionMode
+                captureMode: root.captureMode
+
+                // Re-triggering a capture shortcut while the overlay is open must
+                // restore Instant/draw defaults even on instances whose captureMode/
+                // selectionMode bindings were broken by local writes (C key, toolbar)
+                Connections {
+                    target: root
+                    function onSessionReset() {
+                        selectionWindow.sessionReset();
+                        selectionWindow.selectionMode = root.selectionMode;
+                    }
+                }
             }
         }
     }
@@ -91,6 +114,10 @@ Scope {
     function openWithAction(action) {
         root.action = action;
         root.selectionMode = getSelectionModeForAction(action);
+        root.captureMode = RegionSelection.CaptureMode.Instant;  // Never persists across opens
+        // Instances alive from a still-open overlay may hold locally-written state
+        // (broken bindings); push the Instant/draw defaults to them explicitly
+        root.sessionReset();
         GlobalStates.regionSelectorOpen = true;
     }
 

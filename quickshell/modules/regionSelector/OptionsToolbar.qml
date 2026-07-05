@@ -21,6 +21,9 @@ Toolbar {
     // Use a synchronizer on these
     property var action
     property var selectionMode
+    property var captureMode
+    // True while the adjustable crop editor is open (plain binding from RegionSelection)
+    property bool cropEditing: false
     // Monitor list for full-screen capture buttons
     property var monitors: []
     // Signals
@@ -31,6 +34,18 @@ Toolbar {
     // Use ActionConfig singleton for action metadata
     readonly property var actionConfig: ActionConfig.getConfig(root.action)
     readonly property bool showMonitorButtons: actionConfig.allowsMonitorButtons
+    readonly property bool cropActive: root.captureMode === RegionSelection.CaptureMode.Crop
+
+    // Keep tab indices in sync with externally driven state (C-key toggle swaps
+    // captureMode; entering Crop forces selectionMode back to RectCorners)
+    onCaptureModeChanged: {
+        const idx = root.cropActive ? 1 : 0;
+        if (captureModeTabBar.currentIndex !== idx) captureModeTabBar.setCurrentIndex(idx);
+    }
+    onSelectionModeChanged: {
+        const idx = root.selectionMode === RegionSelection.SelectionMode.RectCorners ? 0 : 1;
+        if (tabBar.currentIndex !== idx) tabBar.setCurrentIndex(idx);
+    }
 
     // Action indicator shape
     MaterialShape {
@@ -50,9 +65,11 @@ Toolbar {
         }
     }
 
-    // Selection mode tabs (Rect/Circle)
+    // Selection mode tabs (Rect/Circle) - inert while Crop is active (Crop implies rectangles)
     ToolbarTabBar {
         id: tabBar
+        enabled: !root.cropActive
+        opacity: enabled ? 1 : 0.4
         tabButtonList: [
             {"icon": "activity_zone", "name": Translation.tr("Rect")},
             {"icon": "gesture", "name": Translation.tr("Circle")}
@@ -62,6 +79,25 @@ Toolbar {
         }
         onCurrentIndexChanged: {
             root.selectionMode = currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
+        }
+    }
+
+    // Capture mode tabs (Instant/Crop) - inert while the crop editor is open so a
+    // stray click/wheel can't flip to Instant and destroy the adjusted crop
+    // (Esc, C and the FABs are the editor exits)
+    ToolbarTabBar {
+        id: captureModeTabBar
+        enabled: !root.cropEditing
+        opacity: enabled ? 1 : 0.4
+        tabButtonList: [
+            {"icon": "bolt", "name": Translation.tr("Instant")},
+            {"icon": "crop", "name": Translation.tr("Crop")}
+        ]
+        Component.onCompleted: {
+            currentIndex = root.cropActive ? 1 : 0
+        }
+        onCurrentIndexChanged: {
+            root.captureMode = currentIndex === 0 ? RegionSelection.CaptureMode.Instant : RegionSelection.CaptureMode.Crop;
         }
     }
 

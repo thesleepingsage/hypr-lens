@@ -162,6 +162,17 @@ Annotation tool used by the **Edit** action.
 
 With satty, **Enter** (or the copy/save toolbar buttons) keeps the edit — copying to the clipboard and, when `screenSnip.copyAlsoSaves` is `true`, saving into the hypr-lens save dir — while **Escape** discards it. satty is configured via the bundled `~/.config/hypr-lens/satty.toml` (edit it to taste; it never touches your own `~/.config/satty`). The swappy fallback is a plain hand-off — swappy uses its own Save/Copy buttons and its own save directory.
 
+### regionSelector.crop
+
+Crop mode: an adjustable crop editor as an alternative to the default instant capture. Toggle it with the **C** key (hardcoded, per monitor) or the Instant/Crop toolbar tabs. In Crop mode, releasing a selection opens an editor with 8 resize handles and interior move-drag instead of capturing immediately; **Enter** (or the confirm button) captures the adjusted region, **Escape** goes back to drawing. The overlay always opens in Instant mode.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `minSize` | `20` | Minimum crop width/height in pixels, enforced per axis while resizing |
+| `handleSize` | `12` | Visual size of the resize handles in pixels |
+
+Values are sanitized on use: `minSize` is clamped to at least `1` and `handleSize` to at least `4`, so zero/negative values can't collapse the crop rect or make the handles ungrabbable.
+
 ---
 
 ## Tips
