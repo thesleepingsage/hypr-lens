@@ -27,7 +27,7 @@ Click and drag to select a rectangular region. Features:
 
 ### Freehand Selection
 
-Freehand captures the true drawn shape: the output is cropped to the loop's bounding box and everything outside the loop is transparent. OCR flattens the mask onto white (tesseract dislikes alpha); recording always captures the bounding rectangle (wf-recorder is rectangle-only). In Crop mode the mask is discarded — the crop editor is a rectangle tool, so a freehand seed adjusted there captures the adjusted rect.
+Freehand captures the true drawn shape: the output is cropped to the loop's bounding box and everything outside the loop is transparent. OCR flattens the mask onto white (tesseract dislikes alpha); recording always captures the bounding rectangle (wf-recorder is rectangle-only). Freehand is Instant-mode only — entering Crop swaps to rectangle selection.
 
 Used for image search by default. Draw a freeform circle around content:
 
@@ -55,7 +55,7 @@ By default captures happen instantly when you release the mouse. Press `C` (or u
 - `Enter` or `Space` (or the confirm button) captures the adjusted region; `Escape` goes back to drawing
 - Works for all actions, including recording; right-click selections still open the editor and route to Edit on confirm
 
-Crop mode is per monitor and always starts off (the overlay opens in Instant mode). Freehand selection works in Crop too — the drawn loop's bounding box seeds the editor. Toggle Rect/Freehand with `R`. Minimum size and handle size are configurable via `regionSelector.crop` in the config.
+Crop mode is per monitor and always starts off (the overlay opens in Instant mode). Crop implies rectangle selection: entering Crop while Freehand is active swaps to Rect, and Freehand cannot be selected while Crop is on (toggle Rect/Freehand with `R` in Instant mode). Minimum size and handle size are configurable via `regionSelector.crop` in the config.
 
 ## Screenshot Actions
 

@@ -46,13 +46,17 @@ PanelWindow {
     property bool isCropMode: (root.captureMode === RegionSelection.CaptureMode.Crop)
 
     // Swapping capture modes resets the editor and any in-progress drag — never the
-    // frame or the selection mode. Circle works in Crop too: the drawn loop's bounding
-    // box seeds the editor. Lives here so both the C key and the toolbar tabs get the
-    // same behavior.
+    // frame. Crop implies rectangles: entering Crop from Freehand auto-swaps to Rect
+    // (and Freehand stays unselectable while Crop is active — R key and tab are inert).
+    // Leaving Crop does NOT restore Freehand; already-Rect swaps are no-ops. Lives here
+    // so both the C key and the toolbar tabs get the same behavior.
     onCaptureModeChanged: {
         root.cropEditing = false;
         root.pendingSnipPoints = [];
         dragState.reset();
+        if (root.isCropMode && root.selectionMode === RegionSelection.SelectionMode.Circle) {
+            root.selectionMode = RegionSelection.SelectionMode.RectCorners;
+        }
     }
 
     // Restore session defaults when a capture shortcut re-triggers while the overlay is
@@ -374,9 +378,10 @@ PanelWindow {
                 root.captureMode = root.isCropMode
                     ? RegionSelection.CaptureMode.Instant
                     : RegionSelection.CaptureMode.Crop;
-            } else if (event.key === Qt.Key_R && event.modifiers === Qt.NoModifier && !dragState.dragging && !root.cropEditing) {
+            } else if (event.key === Qt.Key_R && event.modifiers === Qt.NoModifier && !dragState.dragging && !root.isCropMode) {
                 // Rect/Freehand toggle — same guards as C (no mid-drag swaps), plus
-                // inert while the editor is open, matching the toolbar tab gating
+                // inert while Crop is active (Crop implies rectangles), matching the
+                // toolbar tab gating
                 root.selectionMode = root.selectionMode === RegionSelection.SelectionMode.RectCorners
                     ? RegionSelection.SelectionMode.Circle
                     : RegionSelection.SelectionMode.RectCorners;
@@ -600,6 +605,8 @@ PanelWindow {
                     selectionMode: root.selectionMode
                     captureMode: root.captureMode
                     onSelectionModeSelected: (mode) => {
+                        // Crop implies rectangles (tab is disabled then too — belt and braces)
+                        if (root.isCropMode && mode === RegionSelection.SelectionMode.Circle) return;
                         if (root.selectionMode !== mode) root.selectionMode = mode;
                     }
                     onCaptureModeSelected: (mode) => {

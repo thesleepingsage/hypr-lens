@@ -75,12 +75,11 @@ Toolbar {
         }
     }
 
-    // Selection mode tabs (Rect/Circle) - usable in Crop too (a circle loop seeds the
-    // editor via its bounding box); inert only while the crop editor is open, same as
-    // the capture tabs
+    // Selection mode tabs (Rect/Freehand) - inert while Crop is active (Crop implies
+    // rectangles; entering Crop from Freehand auto-swaps to Rect)
     ToolbarTabBar {
         id: tabBar
-        enabled: !root.cropEditing
+        enabled: !root.cropActive
         opacity: enabled ? 1 : 0.4
         tabButtonList: [
             {"icon": "activity_zone", "name": Translation.tr("Rect")},
