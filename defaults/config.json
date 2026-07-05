@@ -26,6 +26,7 @@
   },
   "monitorOrder": [],
   "regionSelector": {
+    "dragThreshold": 6,
     "targetRegions": {
       "windows": true,
       "layers": false,

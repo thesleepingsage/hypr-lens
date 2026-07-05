@@ -98,7 +98,10 @@ PanelWindow {
     property var imageRegions: []
 
     // Encapsulated drag/selection state
-    RegionDragState { id: dragState }
+    RegionDragState {
+        id: dragState
+        dragThreshold: root.isCircleSelection ? 0 : Math.max(0, Config.options.regionSelector.dragThreshold)
+    }
 
     // Computed region lists using RegionFunctions
     readonly property list<var> layerRegions: RegionFunctions.computeLayerRegions(
@@ -279,6 +282,7 @@ PanelWindow {
             // Controls
             onPressed: (mouse) => {
                 dragState.startDrag(mouse.x, mouse.y, mouse.button);
+                root.updateTargetedRegion(mouse.x, mouse.y);
             }
             onReleased: (mouse) => {
                 // Detect if it was a click -> Try to select targeted region
@@ -286,6 +290,10 @@ PanelWindow {
                     if (dragState.targetedRegionValid()) {
                         const padding = Config.options.regionSelector.targetRegions.selectionPadding;
                         dragState.setRegionToTargeted(padding);
+                    } else {
+                        dragState.endDrag();
+                        root.dismiss();
+                        return;
                     }
                 }
                 // Circle dragging?

@@ -13,11 +13,12 @@ QtObject {
     property bool dragging: false
     property var mouseButton: null
     property list<point> points: []
+    property real dragThreshold: 0
 
     // Computed drag properties
     readonly property real dragDiffX: draggingX - dragStartX
     readonly property real dragDiffY: draggingY - dragStartY
-    readonly property bool draggedAway: (dragDiffX !== 0 || dragDiffY !== 0)
+    readonly property bool draggedAway: (Math.abs(dragDiffX) > dragThreshold || Math.abs(dragDiffY) > dragThreshold)
 
     // Selection region (computed from drag or set explicitly)
     property real regionX: Math.min(dragStartX, draggingX)

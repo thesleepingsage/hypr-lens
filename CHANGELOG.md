@@ -5,6 +5,19 @@ All notable changes to hypr-lens are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
+## Unreleased
+
+### Added
+
+- **`regionSelector.dragThreshold` Config Key** - Pixel dead-zone (default `6`) for the region selector's click/drag discriminator; `0` disables it, restoring the previous per-pixel sensitivity (circle mode always uses `0` — every circle gesture is the drawn shape)
+
+### Changed
+
+- **Region Selector Click/Drag Dead-Zone** - Press-to-release movements within `dragThreshold` (default `6` px) are now treated as clicks that select the whole hovered window/region, instead of snipping a tiny drag rectangle. This is a user-visible behavior change: if you relied on tiny deliberate drags to grab very small rectangles, lower or zero the threshold
+- **Region Selector Empty-Space Clicks** - A click (or sub-threshold micro-drag) over empty space with no targetable region now dismisses the overlay cleanly instead of capturing a sliver
+
+---
+
 ## 1.6.0 - 2026-06-06
 
 ### Added

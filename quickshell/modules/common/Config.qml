@@ -84,6 +84,7 @@ Singleton {
 
             // ─── Region Selector ──────────────────────────────────────────
             property JsonObject regionSelector: JsonObject {
+                property int dragThreshold: 6         // Click/drag dead-zone in px (0 = disabled)
                 // Auto-detection of clickable regions
                 property JsonObject targetRegions: JsonObject {
                     property bool windows: true           // Detect window boundaries

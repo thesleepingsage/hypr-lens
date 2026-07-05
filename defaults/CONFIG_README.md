@@ -104,6 +104,23 @@ Reverse image search settings.
 
 Controls the region selection overlay behavior.
 
+### regionSelector.dragThreshold
+
+Pixel dead-zone for the click/drag discriminator. A press-to-release movement within this distance counts as a **click** (selects the whole hovered window/region) instead of a tiny drag rectangle.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `dragThreshold` | `6` | Dead-zone in pixels; movement beyond this on either axis becomes a drag |
+
+Details:
+
+- The tolerance is **per-axis** (`abs(dragDiffX) > t || abs(dragDiffY) > t`), not a radial distance — a diagonal drift can reach ~`t × √2` px and still count as a click.
+- The comparison is strict `>`: a drift exactly equal to `t` is still a click (with the default, 6 px = click, 7 px = drag).
+- Values below `0` are clamped to `0`.
+- `0` **disables the dead-zone** — the explicit opt-out, restoring the original per-pixel sensitivity where any jitter registers as a drag.
+- The default `6` is tuned for mouse input. Raise it if you still get tiny-rectangle slivers on a trackpad or stylus — touch/pen input jitters more than a mouse.
+- **Circle mode ignores this setting** (always uses `0`): every circle gesture *is* the drawn shape, so there is no whole-target fallback to protect and even the smallest circle must still be drawn.
+
 ### regionSelector.targetRegions
 
 Auto-detection of clickable regions (windows, content areas).
