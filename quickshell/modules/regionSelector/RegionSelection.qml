@@ -430,23 +430,24 @@ PanelWindow {
                 // Circle dragging?
                 else if (root.selectionMode === RegionSelection.SelectionMode.Circle) {
                     const padding = Config.options.regionSelector.circle.padding + Config.options.regionSelector.circle.strokeWidth / 2;
-                    // True-shape capture: stage the path for snip()'s polygon mask.
-                    // Degenerate paths (< 3 vertices) fall back to the bounding box.
-                    // Staged in Crop too — the mask is screen-anchored (snip() transforms
-                    // it against the final rect), so confirm captures loop ∩ adjusted rect.
-                    if (dragState.points.length >= 3) {
-                        root.pendingSnipPoints = dragState.points.slice();
-                    }
                     if (root.isCropMode) {
                         // Crop: seed the editor from the loop's bounding box WITHOUT
                         // setRegionFromCirclePoints — that writes region* directly and
-                        // would break the bindings Esc-back-to-draw depends on
+                        // would break the bindings Esc-back-to-draw depends on.
+                        // No mask staging: the crop editor is a rectangle tool, and a
+                        // mask its handles can't reshape only confuses — true-shape
+                        // capture is Instant-mode freehand only.
                         const box = dragState.circleBoundingBox(padding, mouseArea.mouseX, mouseArea.mouseY);
                         dragState.endDrag();
                         root.openCropEditor(box.x, box.y, box.width, box.height);
                         return;
                     }
                     dragState.setRegionFromCirclePoints(padding, mouseArea.mouseX, mouseArea.mouseY);
+                    // True-shape capture (Instant only): stage the path for snip()'s
+                    // polygon mask. Degenerate paths (< 3 vertices) keep the bbox.
+                    if (dragState.points.length >= 3) {
+                        root.pendingSnipPoints = dragState.points.slice();
+                    }
                 }
                 dragState.endDrag();
                 if (root.isCropMode) {

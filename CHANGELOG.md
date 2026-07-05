@@ -11,7 +11,7 @@ and this project adheres to [Conventional Commits](https://www.conventionalcommi
 
 - **Crop Mode** - Press `C` (or the new Instant/Crop toolbar tabs) to switch the region selector into Crop mode: releasing a selection opens an adjustable editor (8 resize handles + interior move, min-size and screen clamping, live size label) instead of capturing immediately; **Enter**/**Space** or the confirm button captures, **Escape** returns to drawing. Works with both selection modes (a circle loop seeds the editor with its bounding box). Works for screenshots and recording alike; configurable via `regionSelector.crop.minSize`/`handleSize`
 - **`R` Hotkey** - Toggles Rect/Freehand selection mode inside the overlay (the "Circle" tab is now labeled **Freehand**; config keys keep their `circle` names)
-- **Freehand True-Shape Capture** - Freehand selections now capture only the pixels inside the drawn loop (transparent outside, via an ImageMagick polygon mask). OCR flattens onto white; recording remains rectangular. In Crop mode the mask survives the editor - confirm captures the loop intersected with the adjusted rect
+- **Freehand True-Shape Capture** - Freehand selections now capture only the pixels inside the drawn loop (transparent outside, via an ImageMagick polygon mask). OCR flattens onto white; recording and the crop editor remain rectangular (true-shape applies to Instant-mode freehand only)
 - **`regionSelector.dragThreshold` Config Key** - Pixel dead-zone (default `6`) for the region selector's click/drag discriminator; `0` disables it, restoring the previous per-pixel sensitivity (circle mode always uses `0` — every circle gesture is the drawn shape)
 
 ### Changed

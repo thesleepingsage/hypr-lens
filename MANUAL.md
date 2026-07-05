@@ -27,7 +27,7 @@ Click and drag to select a rectangular region. Features:
 
 ### Freehand Selection
 
-Freehand captures the true drawn shape: the output is cropped to the loop's bounding box and everything outside the loop is transparent. OCR flattens the mask onto white (tesseract dislikes alpha); recording always captures the bounding rectangle (wf-recorder is rectangle-only). In Crop mode the mask survives the editor: confirm captures the drawn loop intersected with the adjusted rect.
+Freehand captures the true drawn shape: the output is cropped to the loop's bounding box and everything outside the loop is transparent. OCR flattens the mask onto white (tesseract dislikes alpha); recording always captures the bounding rectangle (wf-recorder is rectangle-only). In Crop mode the mask is discarded — the crop editor is a rectangle tool, so a freehand seed adjusted there captures the adjusted rect.
 
 Used for image search by default. Draw a freeform circle around content:
 
